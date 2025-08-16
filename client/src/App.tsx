@@ -16,17 +16,17 @@ import NotFound from "@/pages/not-found";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
   return (
     <Switch>
-      {isLoading ? (
-        <Route path="*" component={() => <div className="flex items-center justify-center min-h-screen">Loading...</div>} />
-      ) : !isAuthenticated ? (
-        <>
-          <Route path="/" component={Landing} />
-          <Route path="/portal" component={PublicPortal} />
-          <Route component={NotFound} />
-        </>
-      ) : (
+      {/* Public routes - always available */}
+      <Route path="/portal" component={PublicPortal} />
+      
+      {/* Protected routes - only for authenticated users */}
+      {isAuthenticated ? (
         <>
           <Route path="/" component={Home} />
           <Route path="/dashboard" component={AdminDashboard} />
@@ -34,10 +34,16 @@ function Router() {
           <Route path="/news/new" component={NewsEditor} />
           <Route path="/news/edit/:id" component={NewsEditor} />
           <Route path="/users" component={UserManagement} />
-          <Route path="/portal" component={PublicPortal} />
-          <Route component={NotFound} />
+        </>
+      ) : (
+        <>
+          {/* Non-authenticated routes */}
+          <Route path="/" component={Landing} />
         </>
       )}
+      
+      {/* Fallback 404 route */}
+      <Route component={NotFound} />
     </Switch>
   );
 }
