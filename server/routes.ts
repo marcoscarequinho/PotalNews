@@ -114,12 +114,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/categories', isAuthenticated, async (req: any, res) => {
+  // Create a custom isAuthenticated middleware for our system
+  const isAuthenticated = async (req: any, res: any, next: any) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
-      if (user?.role !== 'admin') {
-        return res.status(403).json({ message: "Admin access required" });
+      if (!(req.session as any)?.userId) {
+        return res.status(401).json({ message: "Login necessário" });
       }
+
+      const user = await storage.getUser((req.session as any).userId);
+      if (!user || !user.isActive) {
+        return res.status(401).json({ message: "Usuário inválido" });
+      }
+
+      req.user = user;
+      next();
+    } catch (error) {
+      console.error("Error checking authentication:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  };
+
+  app.post('/api/categories', isAdmin, async (req: any, res) => {
+    try {
 
       const categoryData = insertCategorySchema.parse(req.body);
       const category = await storage.createCategory(categoryData);
@@ -133,12 +149,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/categories/:id', isAuthenticated, async (req: any, res) => {
+  app.put('/api/categories/:id', isAdmin, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
-      if (user?.role !== 'admin') {
-        return res.status(403).json({ message: "Admin access required" });
-      }
 
       const categoryData = insertCategorySchema.partial().parse(req.body);
       const category = await storage.updateCategory(req.params.id, categoryData);
@@ -157,12 +169,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/categories/:id', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/categories/:id', isAdmin, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
-      if (user?.role !== 'admin') {
-        return res.status(403).json({ message: "Admin access required" });
-      }
 
       const success = await storage.deleteCategory(req.params.id);
       if (!success) {
@@ -242,12 +250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/articles', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      
-      if (!user || !user.isActive) {
-        return res.status(403).json({ message: "Access denied" });
-      }
+      const userId = req.user.id;
 
       const articleData = insertArticleSchema.parse({
         ...req.body,
@@ -267,12 +270,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/articles/:id', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      
-      if (!user || !user.isActive) {
-        return res.status(403).json({ message: "Access denied" });
-      }
+      const userId = req.user.id;
 
       // Check if user can edit this article
       const article = await storage.getArticleById(req.params.id);
@@ -281,7 +279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Only admins or the article author can edit
-      if (user.role !== 'admin' && article.authorId !== userId) {
+      if (req.user.role !== 'admin' && article.authorId !== userId) {
         return res.status(403).json({ message: "Not authorized to edit this article" });
       }
 
@@ -302,14 +300,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/articles/:id', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/articles/:id', isAdmin, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      
-      if (user?.role !== 'admin') {
-        return res.status(403).json({ message: "Admin access required" });
-      }
 
       const success = await storage.deleteArticle(req.params.id);
       if (!success) {

@@ -24,7 +24,7 @@ export default function NewsManagement() {
     author: "",
   });
 
-  const { data: articles, isLoading: articlesLoading } = useQuery({
+  const { data: articles = [], isLoading: articlesLoading } = useQuery<any[]>({
     queryKey: ["/api/articles", filters],
     enabled: isAuthenticated,
   });
@@ -204,7 +204,7 @@ export default function NewsManagement() {
               </div>
             ) : articles?.length > 0 ? (
               <div className="space-y-6">
-                {articles.map((article: any) => (
+                {articles && articles.map((article: any) => (
                   <div key={article.id} className="border rounded-lg p-6 hover:shadow-md transition-shadow">
                     <div className="flex items-start space-x-6">
                       {article.imageUrl && (
