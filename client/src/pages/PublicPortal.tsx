@@ -51,9 +51,22 @@ export default function PublicPortal() {
       {/* Header */}
       <header className="bg-primary-orange shadow-lg">
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-white mb-2" data-testid="text-site-title">PORTAL NOTÍCIAS</h1>
-            <p className="text-white/90">Notícias Locais, Regionais e Nacionais</p>
+          <div className="flex justify-between items-center">
+            <div className="flex-1"></div>
+            <div className="text-center flex-1">
+              <h1 className="text-4xl font-bold text-white mb-2" data-testid="text-site-title">PORTAL NOTÍCIAS</h1>
+              <p className="text-white/90">Notícias Locais, Regionais e Nacionais</p>
+            </div>
+            <div className="flex-1 flex justify-end">
+              <button
+                onClick={() => window.location.href = "/api/login"}
+                className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-colors border border-white/20 hover:border-white/40"
+                data-testid="button-admin-login"
+              >
+                <i className="fas fa-user-shield mr-2"></i>
+                Área Administrativa
+              </button>
+            </div>
           </div>
         </div>
         
