@@ -70,6 +70,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create a custom isAdmin middleware
+  const isAdmin = async (req: any, res: any, next: any) => {
+    try {
+      if (!(req.session as any)?.userId) {
+        return res.status(401).json({ message: "Login necessário" });
+      }
+
+      const user = await storage.getUser((req.session as any).userId);
+      if (!user || !user.isActive) {
+        return res.status(401).json({ message: "Usuário inválido" });
+      }
+
+      if (user.role !== 'admin') {
+        return res.status(403).json({ message: "Acesso restrito apenas para administradores" });
+      }
+
+      req.user = user;
+      next();
+    } catch (error) {
+      console.error("Error checking admin access:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  };
+
   app.post('/api/auth/logout', (req, res) => {
     req.session.destroy((err) => {
       if (err) {
@@ -310,19 +334,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User management routes
-  app.get('/api/users', isAuthenticated, async (req: any, res) => {
+  // User management routes (Admin only)
+  app.get('/api/users', isAdmin, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
-      if (user?.role !== 'admin') {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-
-      // For now, return empty array - would need additional user query methods
-      res.json([]);
+      const users = await storage.getAllUsers();
+      res.json(users);
     } catch (error) {
       console.error("Error fetching users:", error);
       res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.post('/api/users', isAdmin, async (req: any, res) => {
+    try {
+      const { email, firstName, lastName, role, password } = req.body;
+      
+      if (!email || !firstName || !lastName || !role) {
+        return res.status(400).json({ message: "Todos os campos são obrigatórios" });
+      }
+
+      if (!['editor', 'journalist'].includes(role)) {
+        return res.status(400).json({ message: "Papel inválido. Use 'editor' ou 'journalist'" });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Usuário já existe com este email" });
+      }
+
+      const newUser = await storage.createUser({
+        email,
+        firstName,
+        lastName,
+        role,
+        isActive: true
+      });
+
+      res.status(201).json({
+        message: "Usuário criado com sucesso",
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+          role: newUser.role,
+          isActive: newUser.isActive
+        }
+      });
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ message: "Erro ao criar usuário" });
+    }
+  });
+
+  app.put('/api/users/:id', isAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { firstName, lastName, role, isActive } = req.body;
+
+      const updatedUser = await storage.updateUser(id, {
+        firstName,
+        lastName,
+        role,
+        isActive
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      res.json({
+        message: "Usuário atualizado com sucesso",
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Erro ao atualizar usuário" });
+    }
+  });
+
+  app.delete('/api/users/:id', isAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      
+      if (id === req.user.id) {
+        return res.status(400).json({ message: "Não é possível deletar sua própria conta" });
+      }
+
+      const success = await storage.deleteUser(id);
+      if (!success) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      res.json({ message: "Usuário deletado com sucesso" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Erro ao deletar usuário" });
     }
   });
 
