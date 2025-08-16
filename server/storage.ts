@@ -12,7 +12,7 @@ import {
   type ArticleWithRelations,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, like, and, or } from "drizzle-orm";
+import { eq, desc, asc, like, and, or, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -111,7 +111,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCategory(id: string): Promise<boolean> {
     const result = await db.delete(categories).where(eq(categories.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   // Article operations
@@ -132,7 +132,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(articles.authorId, users.id));
 
     const conditions = [];
-    if (status) conditions.push(eq(articles.status, status));
+    if (status) conditions.push(eq(articles.status, status as any));
     if (categoryId) conditions.push(eq(articles.categoryId, categoryId));
     if (authorId) conditions.push(eq(articles.authorId, authorId));
     if (search) {
@@ -144,11 +144,9 @@ export class DatabaseStorage implements IStorage {
       );
     }
 
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
+    const finalQuery = conditions.length > 0 ? query.where(and(...conditions)) : query;
 
-    const results = await query
+    const results = await finalQuery
       .orderBy(desc(articles.createdAt))
       .limit(limit)
       .offset(offset);
@@ -248,7 +246,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteArticle(id: string): Promise<boolean> {
     const result = await db.delete(articles).where(eq(articles.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   async incrementViewCount(id: string): Promise<void> {

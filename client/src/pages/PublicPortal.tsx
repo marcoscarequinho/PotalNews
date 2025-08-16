@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import PublicLayout from "@/components/Layout/PublicLayout";
 import { Card, CardContent } from "@/components/ui/card";
+import type { ArticleWithRelations } from "@shared/schema";
 
 export default function PublicPortal() {
-  const { data: articles, isLoading: articlesLoading } = useQuery({
+  const { data: articles, isLoading: articlesLoading } = useQuery<ArticleWithRelations[]>({
     queryKey: ["/api/articles/published"],
   });
 
@@ -11,10 +12,11 @@ export default function PublicPortal() {
     queryKey: ["/api/categories"],
   });
 
-  const featuredArticle = articles?.[0];
-  const sideArticles = articles?.slice(1, 3) || [];
-  const localNews = articles?.filter((article: any) => article.category?.slug === 'local').slice(0, 3) || [];
-  const regionalNews = articles?.filter((article: any) => article.category?.slug === 'regional').slice(0, 3) || [];
+  const articlesArray = Array.isArray(articles) ? articles : [];
+  const featuredArticle = articlesArray[0];
+  const sideArticles = articlesArray.slice(1, 3);
+  const localNews = articlesArray.filter((article: any) => article.category?.slug === 'local').slice(0, 3);
+  const regionalNews = articlesArray.filter((article: any) => article.category?.slug === 'regional').slice(0, 3);
 
   return (
     <PublicLayout>
@@ -98,7 +100,7 @@ export default function PublicPortal() {
                           {featuredArticle.category?.name}
                         </span>
                         <span className="text-gray-500 text-sm">
-                          {new Date(featuredArticle.createdAt).toLocaleDateString('pt-BR')}
+                          {featuredArticle.createdAt ? new Date(featuredArticle.createdAt).toLocaleDateString('pt-BR') : ''}
                         </span>
                       </div>
                       <h2 className="text-2xl font-bold text-dark-blue mb-3">{featuredArticle.title}</h2>
@@ -167,7 +169,7 @@ export default function PublicPortal() {
                             <div className="flex-1">
                               <h4 className="font-medium text-dark-blue text-sm">{article.title}</h4>
                               <p className="text-xs text-gray-500 mt-1">
-                                {new Date(article.createdAt).toLocaleDateString('pt-BR')}
+                                {article.createdAt ? new Date(article.createdAt).toLocaleDateString('pt-BR') : ''}
                               </p>
                             </div>
                           </div>
@@ -201,7 +203,7 @@ export default function PublicPortal() {
                             <div className="flex-1">
                               <h4 className="font-medium text-dark-blue text-sm">{article.title}</h4>
                               <p className="text-xs text-gray-500 mt-1">
-                                {new Date(article.createdAt).toLocaleDateString('pt-BR')}
+                                {article.createdAt ? new Date(article.createdAt).toLocaleDateString('pt-BR') : ''}
                               </p>
                             </div>
                           </div>
