@@ -22,25 +22,23 @@ function Router() {
 
   return (
     <Switch>
-      {/* Public routes - always available */}
-      <Route path="/portal" component={PublicPortal} />
+      {/* Portal público como página inicial */}
+      <Route path="/" component={PublicPortal} />
+      
+      {/* Página de login customizada */}
+      <Route path="/login" component={Landing} />
       
       {/* Protected routes - only for authenticated users */}
       {isAuthenticated ? (
         <>
-          <Route path="/" component={Home} />
+          <Route path="/admin" component={Home} />
           <Route path="/dashboard" component={AdminDashboard} />
           <Route path="/news" component={NewsManagement} />
           <Route path="/news/new" component={NewsEditor} />
           <Route path="/news/edit/:id" component={NewsEditor} />
           <Route path="/users" component={UserManagement} />
         </>
-      ) : (
-        <>
-          {/* Non-authenticated routes */}
-          <Route path="/" component={Landing} />
-        </>
-      )}
+      ) : null}
       
       {/* Fallback 404 route */}
       <Route component={NotFound} />

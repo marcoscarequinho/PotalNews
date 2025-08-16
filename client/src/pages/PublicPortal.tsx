@@ -59,7 +59,7 @@ export default function PublicPortal() {
             </div>
             <div className="flex-1 flex justify-end">
               <button
-                onClick={() => window.location.href = "/api/login"}
+                onClick={() => window.location.href = "/login"}
                 className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-colors border border-white/20 hover:border-white/40"
                 data-testid="button-admin-login"
               >
