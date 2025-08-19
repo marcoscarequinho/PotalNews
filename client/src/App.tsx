@@ -39,9 +39,13 @@ function Router() {
         <>
           <Route path="/admin" component={Home} />
           <Route path="/dashboard" component={AdminDashboard} />
+          <Route path="/news" component={NewsManagement} />
           <Route path="/admin/news" component={NewsManagement} />
+          <Route path="/news/new" component={NewsEditor} />
           <Route path="/admin/news/new" component={NewsEditor} />
+          <Route path="/news/edit/:id" component={NewsEditor} />
           <Route path="/admin/news/edit/:id" component={NewsEditor} />
+          <Route path="/users" component={UserManagement} />
           <Route path="/admin/users" component={UserManagement} />
         </>
       ) : isAuthenticated ? (

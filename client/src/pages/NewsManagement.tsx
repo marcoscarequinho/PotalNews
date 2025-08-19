@@ -135,7 +135,7 @@ export default function NewsManagement() {
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-dark-blue" data-testid="text-page-title">Gerenciar Notícias</h1>
           <div className="flex space-x-4">
-            <Link href="/admin/news/new">
+            <Link href="/news/new">
               <Button className="bg-secondary-blue hover:bg-blue-600 text-white" data-testid="button-new-article">
                 <i className="fas fa-plus mr-2"></i>
                 Nova Notícia
@@ -244,7 +244,7 @@ export default function NewsManagement() {
                           </div>
                         </div>
                         <div className="flex items-center justify-end space-x-2 mt-4">
-                          <Link href={`/admin/news/edit/${article.id}`}>
+                          <Link href={`/news/edit/${article.id}`}>
                             <Button variant="outline" size="sm" data-testid={`button-edit-${article.id}`}>
                               <i className="fas fa-edit mr-2"></i>Editar
                             </Button>
@@ -280,7 +280,7 @@ export default function NewsManagement() {
               <div className="text-center py-8">
                 <i className="fas fa-newspaper text-4xl text-gray-300 mb-4"></i>
                 <p className="text-gray-500 mb-4">Nenhuma notícia encontrada</p>
-                <Link href="/admin/news/new">
+                <Link href="/news/new">
                   <Button className="bg-secondary-blue hover:bg-blue-600 text-white">
                     <i className="fas fa-plus mr-2"></i>
                     Criar Nova Notícia

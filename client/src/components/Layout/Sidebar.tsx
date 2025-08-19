@@ -28,9 +28,9 @@ export default function Sidebar() {
                 Dashboard
               </a>
             </Link>
-            <Link href="/admin/news">
+            <Link href="/news">
               <a className={`flex items-center px-3 py-2 rounded-lg transition-colors ${
-                location.startsWith('/admin/news') 
+                location.startsWith('/news') || location.startsWith('/admin/news')
                   ? 'bg-blue-50 text-secondary-blue' 
                   : 'text-gray-700 hover:bg-gray-100'
               }`} data-testid="nav-news-management">
@@ -38,9 +38,9 @@ export default function Sidebar() {
                 Gerenciar Notícias
               </a>
             </Link>
-            <Link href="/admin/news/new">
+            <Link href="/news/new">
               <a className={`flex items-center px-3 py-2 rounded-lg transition-colors ${
-                isActive('/admin/news/new') 
+                isActive('/news/new') || isActive('/admin/news/new')
                   ? 'bg-blue-50 text-secondary-blue' 
                   : 'text-gray-700 hover:bg-gray-100'
               }`} data-testid="nav-new-news">
@@ -49,9 +49,9 @@ export default function Sidebar() {
               </a>
             </Link>
             {user?.role === 'admin' && (
-              <Link href="/admin/users">
+              <Link href="/users">
                 <a className={`flex items-center px-3 py-2 rounded-lg transition-colors ${
-                  isActive('/admin/users') 
+                  isActive('/users') || isActive('/admin/users')
                     ? 'bg-blue-50 text-secondary-blue' 
                     : 'text-gray-700 hover:bg-gray-100'
                 }`} data-testid="nav-users">
