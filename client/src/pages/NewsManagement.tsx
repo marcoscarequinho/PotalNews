@@ -29,6 +29,21 @@ export default function NewsManagement() {
     enabled: isAuthenticated,
   });
 
+  // Redirect to login if not authenticated
+  if (!isLoading && !isAuthenticated) {
+    setTimeout(() => {
+      window.location.href = "/login";
+    }, 100);
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-secondary-blue mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirecionando para login...</p>
+        </div>
+      </div>
+    );
+  }
+
   const { data: categories } = useQuery({
     queryKey: ["/api/categories"],
     enabled: isAuthenticated,
@@ -96,19 +111,7 @@ export default function NewsManagement() {
     },
   });
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, isLoading, toast]);
+
 
   const handleDelete = (id: string) => {
     if (confirm("Tem certeza que deseja excluir esta notícia?")) {
@@ -244,11 +247,13 @@ export default function NewsManagement() {
                           </div>
                         </div>
                         <div className="flex items-center justify-end space-x-2 mt-4">
-                          <Link href={`/news/edit/${article.id}`}>
-                            <Button variant="outline" size="sm" data-testid={`button-edit-${article.id}`}>
-                              <i className="fas fa-edit mr-2"></i>Editar
-                            </Button>
-                          </Link>
+                          {(user?.role === 'admin' || article.authorId === user?.id) && (
+                            <Link href={`/news/edit/${article.id}`}>
+                              <Button variant="outline" size="sm" data-testid={`button-edit-${article.id}`}>
+                                <i className="fas fa-edit mr-2"></i>Editar
+                              </Button>
+                            </Link>
+                          )}
                           <Button
                             variant="outline"
                             size="sm"

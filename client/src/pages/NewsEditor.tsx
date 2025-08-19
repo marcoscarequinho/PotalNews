@@ -16,6 +16,21 @@ export default function NewsEditor() {
   const { id } = useParams();
   const isEditing = Boolean(id);
 
+  // Redirect to login if not authenticated
+  if (!isLoading && !isAuthenticated) {
+    setTimeout(() => {
+      window.location.href = "/login";
+    }, 100);
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-secondary-blue mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirecionando para login...</p>
+        </div>
+      </div>
+    );
+  }
+
   const { data: article, isLoading: articleLoading } = useQuery({
     queryKey: ["/api/articles", id],
     enabled: isAuthenticated && isEditing,
@@ -92,19 +107,7 @@ export default function NewsEditor() {
     },
   });
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, isLoading, toast]);
+
 
   const handleSubmit = (data: any) => {
     if (isEditing) {
@@ -137,7 +140,7 @@ export default function NewsEditor() {
 
         <NewsForm
           initialData={article}
-          categories={categories || []}
+          categories={Array.isArray(categories) ? categories : []}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           isLoading={createMutation.isPending || updateMutation.isPending}
