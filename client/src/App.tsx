@@ -9,6 +9,7 @@ import Home from "@/pages/Home";
 import AdminDashboard from "@/pages/AdminDashboard";
 import NewsManagement from "@/pages/NewsManagement";
 import NewsEditor from "@/pages/NewsEditor";
+import NewsView from "@/pages/NewsView";
 import UserManagement from "@/pages/UserManagement";
 import PublicPortal from "@/pages/PublicPortal";
 import NotFound from "@/pages/not-found";
@@ -27,6 +28,9 @@ function Router() {
       {/* Portal público como página inicial */}
       <Route path="/" component={PublicPortal} />
       
+      {/* Página de visualização de notícias */}
+      <Route path="/news/:id" component={NewsView} />
+      
       {/* Página de login customizada */}
       <Route path="/login" component={Landing} />
       
@@ -35,14 +39,14 @@ function Router() {
         <>
           <Route path="/admin" component={Home} />
           <Route path="/dashboard" component={AdminDashboard} />
-          <Route path="/news" component={NewsManagement} />
-          <Route path="/news/new" component={NewsEditor} />
-          <Route path="/news/edit/:id" component={NewsEditor} />
-          <Route path="/users" component={UserManagement} />
+          <Route path="/admin/news" component={NewsManagement} />
+          <Route path="/admin/news/new" component={NewsEditor} />
+          <Route path="/admin/news/edit/:id" component={NewsEditor} />
+          <Route path="/admin/users" component={UserManagement} />
         </>
       ) : isAuthenticated ? (
         // Non-admin authenticated users get redirected to access denied
-        <Route path="/admin" component={() => <AccessDenied />} />
+        <Route path="/admin*" component={() => <AccessDenied />} />
       ) : null}
       
       {/* Fallback 404 route */}

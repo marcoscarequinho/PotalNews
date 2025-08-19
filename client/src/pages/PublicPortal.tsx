@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import PublicLayout from "@/components/Layout/PublicLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import type { ArticleWithRelations } from "@shared/schema";
@@ -116,11 +117,15 @@ export default function PublicPortal() {
                           {featuredArticle.createdAt ? new Date(featuredArticle.createdAt).toLocaleDateString('pt-BR') : ''}
                         </span>
                       </div>
-                      <h2 className="text-2xl font-bold text-dark-blue mb-3">{featuredArticle.title}</h2>
+                      <Link href={`/news/${featuredArticle.id}`}>
+                        <h2 className="text-2xl font-bold text-dark-blue mb-3 cursor-pointer hover:text-blue-700 transition-colors">{featuredArticle.title}</h2>
+                      </Link>
                       <p className="text-gray-600 mb-4">{featuredArticle.excerpt}</p>
-                      <a href="#" className="text-secondary-blue font-medium hover:text-blue-700">
-                        Leia mais →
-                      </a>
+                      <Link href={`/news/${featuredArticle.id}`}>
+                        <span className="text-secondary-blue font-medium hover:text-blue-700 cursor-pointer">
+                          Leia mais →
+                        </span>
+                      </Link>
                     </CardContent>
                   </Card>
                 ) : (
@@ -151,7 +156,9 @@ export default function PublicPortal() {
                       >
                         {article.category?.name}
                       </span>
-                      <h3 className="font-semibold text-dark-blue mt-2 mb-2">{article.title}</h3>
+                      <Link href={`/news/${article.id}`}>
+                        <h3 className="font-semibold text-dark-blue mt-2 mb-2 cursor-pointer hover:text-blue-700 transition-colors">{article.title}</h3>
+                      </Link>
                       <p className="text-gray-600 text-sm">{article.excerpt}</p>
                     </CardContent>
                   </Card>
