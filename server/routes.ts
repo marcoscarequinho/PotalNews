@@ -475,6 +475,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Saved articles endpoints (read later functionality)
+  app.post("/api/articles/:id/save", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const articleId = req.params.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const savedArticle = await storage.saveArticle(userId, articleId);
+      res.json(savedArticle);
+    } catch (error) {
+      console.error("Error saving article:", error);
+      res.status(500).json({ message: "Failed to save article" });
+    }
+  });
+
+  app.delete("/api/articles/:id/save", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const articleId = req.params.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const success = await storage.unsaveArticle(userId, articleId);
+      if (success) {
+        res.json({ message: "Article unsaved successfully" });
+      } else {
+        res.status(404).json({ message: "Saved article not found" });
+      }
+    } catch (error) {
+      console.error("Error unsaving article:", error);
+      res.status(500).json({ message: "Failed to unsave article" });
+    }
+  });
+
+  app.get("/api/saved-articles", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const savedArticles = await storage.getSavedArticles(userId);
+      res.json(savedArticles);
+    } catch (error) {
+      console.error("Error fetching saved articles:", error);
+      res.status(500).json({ message: "Failed to fetch saved articles" });
+    }
+  });
+
+  app.get("/api/articles/:id/is-saved", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const articleId = req.params.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const isSaved = await storage.isArticleSaved(userId, articleId);
+      res.json({ isSaved });
+    } catch (error) {
+      console.error("Error checking if article is saved:", error);
+      res.status(500).json({ message: "Failed to check article save status" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

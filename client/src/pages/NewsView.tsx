@@ -2,6 +2,7 @@ import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { SaveArticleButton } from "@/components/SaveArticleButton";
 
 export default function NewsView() {
   const { id } = useParams();
@@ -58,6 +59,9 @@ export default function NewsView() {
             <nav className="flex space-x-6">
               <Link href="/" className="text-gray-700 hover:text-dark-blue transition-colors">
                 Início
+              </Link>
+              <Link href="/saved" className="text-gray-700 hover:text-dark-blue transition-colors">
+                Artigos Salvos
               </Link>
               <Link href="/login" className="text-gray-700 hover:text-dark-blue transition-colors">
                 Admin
@@ -118,6 +122,23 @@ export default function NewsView() {
                 />
               </div>
             )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 mb-6">
+              <SaveArticleButton 
+                articleId={article.id}
+                variant="outline"
+                size="sm"
+                className="border-gray-300 text-gray-700 hover:bg-gray-50"
+              />
+              <Button 
+                className="bg-primary-orange hover:bg-orange-600 text-white"
+                data-testid="button-share"
+              >
+                <i className="fas fa-share mr-2"></i>
+                Compartilhar
+              </Button>
+            </div>
 
             {/* Content */}
             <div

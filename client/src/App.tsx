@@ -12,6 +12,7 @@ import NewsEditor from "@/pages/NewsEditor";
 import NewsView from "@/pages/NewsView";
 import UserManagement from "@/pages/UserManagement";
 import PublicPortal from "@/pages/PublicPortal";
+import { SavedArticles } from "@/pages/SavedArticles";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -30,6 +31,11 @@ function Router() {
       
       {/* Página de visualização de notícias */}
       <Route path="/news/:id" component={NewsView} />
+      
+      {/* Artigos salvos - usuários autenticados */}
+      {isAuthenticated ? (
+        <Route path="/saved" component={SavedArticles} />
+      ) : null}
       
       {/* Página de login customizada */}
       <Route path="/login" component={Landing} />

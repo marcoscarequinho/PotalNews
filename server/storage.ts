@@ -2,6 +2,7 @@ import {
   users,
   categories,
   articles,
+  savedArticles,
   type User,
   type UpsertUser,
   type Category,
@@ -10,6 +11,8 @@ import {
   type InsertArticle,
   type UpdateArticle,
   type ArticleWithRelations,
+  type SavedArticle,
+  type InsertSavedArticle,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, like, and, or, sql } from "drizzle-orm";
@@ -52,6 +55,12 @@ export interface IStorage {
   updateArticle(id: string, article: UpdateArticle): Promise<Article | undefined>;
   deleteArticle(id: string): Promise<boolean>;
   incrementViewCount(id: string): Promise<void>;
+  
+  // Saved articles operations (read later functionality)
+  saveArticle(userId: string, articleId: string): Promise<SavedArticle>;
+  unsaveArticle(userId: string, articleId: string): Promise<boolean>;
+  getSavedArticles(userId: string): Promise<ArticleWithRelations[]>;
+  isArticleSaved(userId: string, articleId: string): Promise<boolean>;
   
   // Statistics
   getStats(): Promise<{
@@ -342,6 +351,89 @@ export class DatabaseStorage implements IStorage {
       totalUsers: totalUsersResult.count,
       totalViews: totalViewsResult.sum,
     };
+  }
+
+  // Saved articles operations (read later functionality)
+  async saveArticle(userId: string, articleId: string): Promise<SavedArticle> {
+    try {
+      const [savedArticle] = await db
+        .insert(savedArticles)
+        .values({
+          userId,
+          articleId,
+        })
+        .returning();
+      return savedArticle;
+    } catch (error) {
+      // If it's a duplicate key error, return the existing record
+      const [existing] = await db
+        .select()
+        .from(savedArticles)
+        .where(and(eq(savedArticles.userId, userId), eq(savedArticles.articleId, articleId)));
+      if (existing) {
+        return existing;
+      }
+      throw error;
+    }
+  }
+
+  async unsaveArticle(userId: string, articleId: string): Promise<boolean> {
+    const result = await db
+      .delete(savedArticles)
+      .where(and(eq(savedArticles.userId, userId), eq(savedArticles.articleId, articleId)));
+    return result.rowCount > 0;
+  }
+
+  async getSavedArticles(userId: string): Promise<ArticleWithRelations[]> {
+    const results = await db
+      .select({
+        id: articles.id,
+        title: articles.title,
+        content: articles.content,
+        excerpt: articles.excerpt,
+        imageUrl: articles.imageUrl,
+        slug: articles.slug,
+        status: articles.status,
+        categoryId: articles.categoryId,
+        authorId: articles.authorId,
+        createdAt: articles.createdAt,
+        updatedAt: articles.updatedAt,
+        viewCount: articles.viewCount,
+        category: {
+          id: categories.id,
+          name: categories.name,
+          slug: categories.slug,
+          color: categories.color,
+          description: categories.description,
+          createdAt: categories.createdAt,
+        },
+        author: {
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          role: users.role,
+          isActive: users.isActive,
+          createdAt: users.createdAt,
+          updatedAt: users.updatedAt,
+        },
+      })
+      .from(savedArticles)
+      .innerJoin(articles, eq(savedArticles.articleId, articles.id))
+      .leftJoin(categories, eq(articles.categoryId, categories.id))
+      .leftJoin(users, eq(articles.authorId, users.id))
+      .where(eq(savedArticles.userId, userId))
+      .orderBy(desc(savedArticles.createdAt));
+
+    return results as ArticleWithRelations[];
+  }
+
+  async isArticleSaved(userId: string, articleId: string): Promise<boolean> {
+    const [result] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(savedArticles)
+      .where(and(eq(savedArticles.userId, userId), eq(savedArticles.articleId, articleId)));
+    return Number(result.count) > 0;
   }
 }
 

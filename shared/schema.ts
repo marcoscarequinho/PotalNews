@@ -121,8 +121,25 @@ export type InsertArticle = z.infer<typeof insertArticleSchema>;
 export type UpdateArticle = z.infer<typeof updateArticleSchema>;
 export type Article = typeof articles.$inferSelect;
 
+// Saved articles table for read later functionality
+export const savedArticles = pgTable("saved_articles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  articleId: varchar("article_id").notNull().references(() => articles.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("saved_articles_user_id_idx").on(table.userId),
+  index("saved_articles_article_id_idx").on(table.articleId),
+  // Unique constraint to prevent duplicate saves
+  index("saved_articles_user_article_unique").on(table.userId, table.articleId),
+]);
+
+export type SavedArticle = typeof savedArticles.$inferSelect;
+export type InsertSavedArticle = typeof savedArticles.$inferInsert;
+
 // Extended types with relations
 export type ArticleWithRelations = Article & {
   category: Category;
   author: User;
+  isSaved?: boolean;
 };
