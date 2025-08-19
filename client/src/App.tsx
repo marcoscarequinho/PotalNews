@@ -29,8 +29,7 @@ function Router() {
       {/* Portal público como página inicial */}
       <Route path="/" component={PublicPortal} />
       
-      {/* Página de visualização de notícias */}
-      <Route path="/news/:id" component={NewsView} />
+      {/* Página de visualização de notícias - deve vir depois das rotas específicas */}
       
       {/* Artigos salvos - usuários autenticados */}
       {isAuthenticated ? (
@@ -58,6 +57,9 @@ function Router() {
         // Non-admin authenticated users get redirected to access denied
         <Route path="/admin*" component={() => <AccessDenied />} />
       ) : null}
+      
+      {/* Página de visualização de notícias - deve vir por último para não conflitar */}
+      <Route path="/news/:id" component={NewsView} />
       
       {/* Fallback 404 route */}
       <Route component={NotFound} />
