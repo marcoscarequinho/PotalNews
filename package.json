@@ -9,7 +9,8 @@
     "vercel-build": "npm run build",
     "start": "NODE_ENV=production node dist/index.js",
     "check": "tsc",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "create-admin": "ts-node --project tsconfig.json -r dotenv/config -r tsconfig-paths/register api/createAdmin.ts"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.16.0",
@@ -106,10 +107,13 @@
     "@vitejs/plugin-react": "^4.3.2",
     "autoprefixer": "^10.4.20",
     "cross-env": "^10.0.0",
+    "dotenv": "^17.2.2",
     "drizzle-kit": "^0.30.4",
     "esbuild": "^0.25.0",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.17",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "tsx": "^4.19.1",
     "typescript": "5.6.3",
     "vite": "^5.4.19"
