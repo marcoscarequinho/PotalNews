@@ -6,6 +6,7 @@ import app from './index';
 const serverlessExpressHandler = serverlessExpress({ app });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  console.log('Vercel handler hit:', req.method, req.url);
   try {
     // Pass the Vercel request to the Express app
     return serverlessExpressHandler(req, res);

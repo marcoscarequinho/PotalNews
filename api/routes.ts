@@ -8,11 +8,14 @@ import { insertCategorySchema, insertArticleSchema, updateArticleSchema } from "
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  console.log('Registering routes...');
+  
   // Auth middleware
   await setupAuth(app);
 
   // Auth routes
   app.post('/api/auth/login', async (req, res) => {
+    console.log('Login route hit:', req.body);
     try {
       const { email, password } = req.body;
       
@@ -548,5 +551,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  console.log('Routes registered successfully');
   return httpServer;
 }

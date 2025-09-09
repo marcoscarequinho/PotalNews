@@ -3,6 +3,10 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, log } from "./vite";
 
+console.log('Starting server with environment:', process.env.NODE_ENV);
+console.log('Vercel environment:', process.env.VERCEL);
+console.log('Auth mode:', process.env.AUTH_MODE);
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
