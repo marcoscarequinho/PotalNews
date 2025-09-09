@@ -381,7 +381,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(savedArticles)
       .where(and(eq(savedArticles.userId, userId), eq(savedArticles.articleId, articleId)));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   async getSavedArticles(userId: string): Promise<ArticleWithRelations[]> {

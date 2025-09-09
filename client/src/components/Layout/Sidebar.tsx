@@ -1,12 +1,13 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
+import { Stats } from "@shared/types";
 
 export default function Sidebar() {
   const { user } = useAuth();
   const [location] = useLocation();
   
-  const { data: stats } = useQuery({
+  const { data: stats } = useQuery<Stats>({
     queryKey: ["/api/stats"],
   });
 

@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import NewsCard from "@/components/News/NewsCard";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { ArticleWithRelations, Category } from "@shared/schema";
 
 export default function NewsManagement() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -24,7 +25,7 @@ export default function NewsManagement() {
     author: "",
   });
 
-  const { data: articles = [], isLoading: articlesLoading } = useQuery<any[]>({
+  const { data: articles = [], isLoading: articlesLoading } = useQuery<ArticleWithRelations[]>({
     queryKey: ["/api/articles", filters],
     enabled: isAuthenticated,
   });
@@ -44,7 +45,7 @@ export default function NewsManagement() {
     );
   }
 
-  const { data: categories } = useQuery({
+  const { data: categories } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
     enabled: isAuthenticated,
   });

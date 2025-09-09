@@ -7,17 +7,19 @@ import AdminLayout from "@/components/Layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import NewsCard from "@/components/News/NewsCard";
+import { Stats } from "@shared/types";
+import { ArticleWithRelations } from "@shared/schema";
 
 export default function AdminDashboard() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const { toast } = useToast();
 
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  const { data: stats, isLoading: statsLoading } = useQuery<Stats>({
     queryKey: ["/api/stats"],
     enabled: isAuthenticated,
   });
 
-  const { data: recentArticles, isLoading: articlesLoading } = useQuery({
+  const { data: recentArticles, isLoading: articlesLoading } = useQuery<ArticleWithRelations[]>({
     queryKey: ["/api/articles"],
     enabled: isAuthenticated,
   });
@@ -139,9 +141,9 @@ export default function AdminDashboard() {
                   </div>
                 ))}
               </div>
-            ) : recentArticles?.length > 0 ? (
+            ) : recentArticles && recentArticles.length > 0 ? (
               <div className="space-y-4">
-                {recentArticles.slice(0, 5).map((article: any) => (
+                {recentArticles.slice(0, 5).map((article) => (
                   <NewsCard key={article.id} article={article} />
                 ))}
               </div>
