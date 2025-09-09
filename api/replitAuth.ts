@@ -10,7 +10,11 @@ import { storage } from "./storage";
 let setupAuth: (app: Express) => Promise<void>;
 let isAuthenticated: RequestHandler;
 
-if (process.env.AUTH_MODE === 'mock') {
+// Default to 'mock' mode for development and when not on Vercel
+// Use Replit auth for production on Vercel (when REPLIT_DOMAINS is set)
+const authMode = process.env.AUTH_MODE || (process.env.VERCEL === "1" && process.env.REPLIT_DOMAINS ? 'replit' : 'mock');
+
+if (authMode === 'mock') {
   console.log('Auth is running in mock mode');
   
   setupAuth = async (app: Express) => {
