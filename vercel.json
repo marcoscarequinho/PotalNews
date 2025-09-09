@@ -7,14 +7,6 @@
       "config": {
         "distDir": "dist"
       }
-    },
-    {
-      "src": "api/vercel.ts",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "api/login.ts",
-      "use": "@vercel/node"
     }
   ],
   "routes": [
