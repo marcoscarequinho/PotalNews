@@ -37,18 +37,10 @@ app.use((req, res, next) => {
   next();
 });
 
-<<<<<<< HEAD
 // Register routes
 let server: any;
 (async () => {
   server = await registerRoutes(app);
-=======
-// Vercel requires us to export the Express app for serverless functions
-export default app;
-
-(async () => {
-  const server = await registerRoutes(app);
->>>>>>> d8854f3ffc5422f02cd192b105bfd924de4cc9a7
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -80,7 +72,6 @@ export default app;
       log(`serving on port ${port}`);
     });
   }
-<<<<<<< HEAD
 })();
 
 // Vercel requires us to export the Express app for serverless functions
@@ -88,6 +79,3 @@ export default app;
 
 // Export a handler for Vercel
 export { app as vercelApp };
-=======
-})();
->>>>>>> d8854f3ffc5422f02cd192b105bfd924de4cc9a7
