@@ -104,21 +104,33 @@
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.1",
     "@types/ws": "^8.5.13",
+<<<<<<< HEAD
     "@vendia/serverless-express": "^4.12.6",
     "@vercel/node": "^2.15.10",
+=======
+>>>>>>> d8854f3ffc5422f02cd192b105bfd924de4cc9a7
     "@vitejs/plugin-react": "^4.3.2",
     "autoprefixer": "^10.4.20",
     "cross-env": "^10.0.0",
     "dotenv": "^17.2.2",
+<<<<<<< HEAD
     "drizzle-kit": "^0.31.4",
     "esbuild": "^0.25.9",
+=======
+    "drizzle-kit": "^0.30.4",
+    "esbuild": "^0.25.0",
+>>>>>>> d8854f3ffc5422f02cd192b105bfd924de4cc9a7
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.17",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.19.1",
     "typescript": "5.6.3",
+<<<<<<< HEAD
     "vite": "^7.1.5"
+=======
+    "vite": "^5.4.19"
+>>>>>>> d8854f3ffc5422f02cd192b105bfd924de4cc9a7
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
