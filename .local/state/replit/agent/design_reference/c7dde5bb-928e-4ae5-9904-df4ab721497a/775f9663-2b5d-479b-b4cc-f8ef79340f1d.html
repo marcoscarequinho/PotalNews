@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Notícias - Sistema Administrativo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-orange': '#E67E22',
+                        'secondary-blue': '#3498DB',
+                        'accent-yellow': '#F1C40F',
+                        'dark-blue': '#2C3E50',
+                        'light-gray': '#ECF0F1'
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="font-inter bg-gray-50">
+    
+    <!-- @COMPONENT: NavigationHeader [role-based visibility, logo, menu, user actions] -->
+    <header class="bg-primary-orange shadow-lg">
+        <div class="bg-gray-100 py-2">
+            <div class="max-w-7xl mx-auto px-4 flex justify-between items-center text-sm">
+                <span class="text-gray-600" data-bind="currentDate">sábado, dezembro 16, 2024</span>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-600 hover:text-primary-orange"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="text-gray-600 hover:text-primary-orange"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="text-gray-600 hover:text-primary-orange"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="text-gray-600 hover:text-primary-orange"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="text-center">
+                    <h1 class="text-4xl font-bold text-white mb-2">PORTAL NOTÍCIAS</h1>
+                    <p class="text-white/90 text-sm">Sistema Administrativo - Gestão de Conteúdo Jornalístico</p>
+                </div>
+                
+                <!-- @STATE: userRole:string = "admin" | "editor" -->
+                <div class="flex items-center space-x-4">
+                    <div class="bg-white/10 rounded-lg px-3 py-2">
+                        <span class="text-white text-sm">Logado como:</span>
+                        <span class="text-white font-semibold ml-1" data-bind="user.name">João Silva</span>
+                        <span class="text-xs bg-green-500 text-white px-2 py-1 rounded ml-2" data-bind="user.role">Administrador</span>
+                    </div>
+                    <button class="text-white hover:text-accent-yellow" data-event="click:logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <nav class="bg-accent-yellow">
+            <div class="max-w-7xl mx-auto px-4">
+                <ul class="flex space-x-8 py-3">
+                    <li><a href="#dashboard" class="text-dark-blue font-medium hover:text-primary-orange transition-colors" data-event="click:navigateTo:dashboard">Dashboard</a></li>
+                    <li><a href="#noticias" class="text-dark-blue font-medium hover:text-primary-orange transition-colors" data-event="click:navigateTo:news">Notícias</a></li>
+                    <li><a href="#categorias" class="text-dark-blue font-medium hover:text-primary-orange transition-colors" data-event="click:navigateTo:categories">Categorias</a></li>
+                    <!-- @CONDITIONAL: Only show for admin role -->
+                    <li data-show-for-role="admin"><a href="#usuarios" class="text-dark-blue font-medium hover:text-primary-orange transition-colors" data-event="click:navigateTo:users">Usuários</a></li>
+                    <li><a href="#portal-publico" class="text-dark-blue font-medium hover:text-primary-orange transition-colors" data-event="click:openPublicPortal">Portal Público</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+    <!-- @END_COMPONENT: NavigationHeader -->
+
+    <div class="flex min-h-screen">
+        <!-- @COMPONENT: Sidebar [navigation menu] -->
+        <aside class="w-64 bg-white shadow-lg">
+            <div class="p-6">
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-dark-blue mb-4">Menu Principal</h3>
+                    <nav class="space-y-2">
+                        <a href="#dashboard" class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100 active:bg-blue-50 active:text-secondary-blue" data-event="click:setActiveView:dashboard">
+                            <i class="fas fa-tachometer-alt mr-3"></i>
+                            Dashboard
+                        </a>
+                        <a href="#noticias" class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100" data-event="click:setActiveView:news">
+                            <i class="fas fa-newspaper mr-3"></i>
+                            Gerenciar Notícias
+                        </a>
+                        <a href="#nova-noticia" class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100" data-event="click:setActiveView:newNews">
+                            <i class="fas fa-plus-circle mr-3"></i>
+                            Nova Notícia
+                        </a>
+                        <a href="#categorias" class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100" data-event="click:setActiveView:categories">
+                            <i class="fas fa-tags mr-3"></i>
+                            Categorias
+                        </a>
+                        <!-- @CONDITIONAL: Admin only -->
+                        <div data-show-for-role="admin">
+                            <a href="#usuarios" class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100" data-event="click:setActiveView:users">
+                                <i class="fas fa-users mr-3"></i>
+                                Usuários
+                            </a>
+                        </div>
+                    </nav>
+                </div>
+                
+                <div class="border-t pt-6">
+                    <h3 class="text-lg font-semibold text-dark-blue mb-4">Estatísticas Rápidas</h3>
+                    <div class="space-y-3">
+                        <div class="bg-blue-50 p-3 rounded-lg">
+                            <div class="text-secondary-blue font-semibold" data-bind="stats.publishedNews">42</div>
+                            <div class="text-sm text-gray-600">Notícias Publicadas</div>
+                        </div>
+                        <div class="bg-yellow-50 p-3 rounded-lg">
+                            <div class="text-accent-yellow font-semibold" data-bind="stats.draftNews">8</div>
+                            <div class="text-sm text-gray-600">Rascunhos</div>
+                        </div>
+                        <div class="bg-green-50 p-3 rounded-lg">
+                            <div class="text-green-600 font-semibold" data-bind="stats.todayViews">1.2k</div>
+                            <div class="text-sm text-gray-600">Visualizações Hoje</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <!-- @END_COMPONENT: Sidebar -->
+
+        <!-- @COMPONENT: MainContent [dynamic content area] -->
+        <main class="flex-1 p-8">
+            
+            <!-- @COMPONENT: DashboardView [statistics and overview] -->
+            <div id="dashboard-view" class="space-y-8">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-3xl font-bold text-dark-blue">Dashboard</h1>
+                    <button class="bg-secondary-blue text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors" data-event="click:refreshDashboard">
+                        <i class="fas fa-sync-alt mr-2"></i>
+                        Atualizar
+                    </button>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-secondary-blue">
+                        <div class="flex items-center">
+                            <div class="p-3 bg-blue-100 rounded-full">
+                                <i class="fas fa-newspaper text-secondary-blue text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-sm font-medium text-gray-500">Total de Notícias</h3>
+                                <p class="text-2xl font-bold text-dark-blue" data-bind="stats.totalNews">156</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
+                        <div class="flex items-center">
+                            <div class="p-3 bg-green-100 rounded-full">
+                                <i class="fas fa-eye text-green-500 text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-sm font-medium text-gray-500">Visualizações</h3>
+                                <p class="text-2xl font-bold text-dark-blue" data-bind="stats.totalViews">45.2k</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-accent-yellow">
+                        <div class="flex items-center">
+                            <div class="p-3 bg-yellow-100 rounded-full">
+                                <i class="fas fa-users text-accent-yellow text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-sm font-medium text-gray-500">Jornalistas</h3>
+                                <p class="text-2xl font-bold text-dark-blue" data-bind="stats.activeJournalists">12</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-red-500">
+                        <div class="flex items-center">
+                            <div class="p-3 bg-red-100 rounded-full">
+                                <i class="fas fa-edit text-red-500 text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-sm font-medium text-gray-500">Aguardando Revisão</h3>
+                                <p class="text-2xl font-bold text-dark-blue" data-bind="stats.pendingReview">5</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent News Management -->
+                <div class="bg-white rounded-xl shadow-md">
+                    <div class="p-6 border-b">
+                        <h2 class="text-xl font-semibold text-dark-blue">Notícias Recentes</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <!-- @MAP: recentNews.map(news => ( -->
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors" data-mock="true">
+                                <div class="flex items-center space-x-4">
+                                    <!-- Small news thumbnail -->
+                                    <img src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=60" alt="Notícia thumbnail" class="w-16 h-10 object-cover rounded" data-mock-image="true">
+                                    <div>
+                                        <h3 class="font-medium text-dark-blue" data-bind="news.title">Polícia Militar Realiza Prisão em Araruama</h3>
+                                        <p class="text-sm text-gray-500" data-bind="news.author">Por: Maria Silva • <span data-bind="news.publishDate">16 de dezembro de 2024</span></p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full" data-bind="news.status">Publicado</span>
+                                    <button class="text-blue-600 hover:text-blue-800" data-event="click:editNews" data-implementation="Open news editor modal">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <!-- @CONDITIONAL: Admin only -->
+                                    <button class="text-red-600 hover:text-red-800" data-show-for-role="admin" data-event="click:deleteNews" data-implementation="Show confirmation dialog">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- @END_MAP )) -->
+
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors" data-mock="true">
+                                <div class="flex items-center space-x-4">
+                                    <!-- News thumbnail showing Brazilian electoral system -->
+                                    <img src="https://images.unsplash.com/photo-1541872705-1f73c6400ec9?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=60" alt="Eleições municipais" class="w-16 h-10 object-cover rounded" data-mock-image="true">
+                                    <div>
+                                        <h3 class="font-medium text-dark-blue">Eleições Municipais 2024: A Hora da Mudança</h3>
+                                        <p class="text-sm text-gray-500">Por: João Santos • 15 de dezembro de 2024</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">Rascunho</span>
+                                    <button class="text-blue-600 hover:text-blue-800" data-event="click:editNews">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="text-red-600 hover:text-red-800" data-show-for-role="admin" data-event="click:deleteNews">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors" data-mock="true">
+                                <div class="flex items-center space-x-4">
+                                    <!-- Brazilian journalism newsroom image -->
+                                    <img src="https://images.unsplash.com/photo-1586339949916-3e9457bef6d3?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=60" alt="Medida protetiva" class="w-16 h-10 object-cover rounded" data-mock-image="true">
+                                    <div>
+                                        <h3 class="font-medium text-dark-blue">Medida Protetiva Violada: Homem Ameaça Ex em Campos</h3>
+                                        <p class="text-sm text-gray-500">Por: Ana Costa • 14 de dezembro de 2024</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">Em Revisão</span>
+                                    <button class="text-blue-600 hover:text-blue-800" data-event="click:editNews">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="text-red-600 hover:text-red-800" data-show-for-role="admin" data-event="click:deleteNews">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: DashboardView -->
+
+            <!-- @COMPONENT: NewsManagementView [hidden by default] -->
+            <div id="news-management-view" class="hidden space-y-8">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-3xl font-bold text-dark-blue">Gerenciar Notícias</h1>
+                    <div class="flex space-x-4">
+                        <button class="bg-secondary-blue text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors" data-event="click:createNews">
+                            <i class="fas fa-plus mr-2"></i>
+                            Nova Notícia
+                        </button>
+                        <button class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors" data-event="click:exportNews">
+                            <i class="fas fa-download mr-2"></i>
+                            Exportar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters and Search -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
+                            <input type="text" placeholder="Título da notícia..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-blue" data-event="input:searchNews">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Categoria</label>
+                            <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-blue" data-event="change:filterByCategory">
+                                <option value="">Todas as categorias</option>
+                                <option value="local" data-mock="true">Local</option>
+                                <option value="regional" data-mock="true">Regional</option>
+                                <option value="nacional" data-mock="true">Nacional</option>
+                                <option value="internacional" data-mock="true">Internacional</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-blue" data-event="change:filterByStatus">
+                                <option value="">Todos os status</option>
+                                <option value="published" data-mock="true">Publicado</option>
+                                <option value="draft" data-mock="true">Rascunho</option>
+                                <option value="review" data-mock="true">Em Revisão</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Autor</label>
+                            <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-blue" data-event="change:filterByAuthor">
+                                <option value="">Todos os autores</option>
+                                <option value="maria-silva" data-mock="true">Maria Silva</option>
+                                <option value="joao-santos" data-mock="true">João Santos</option>
+                                <option value="ana-costa" data-mock="true">Ana Costa</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- News List -->
+                <div class="bg-white rounded-xl shadow-md">
+                    <div class="p-6">
+                        <div class="space-y-6">
+                            <!-- @MAP: filteredNews.map(news => ( -->
+                            <div class="border rounded-lg p-6 hover:shadow-md transition-shadow" data-mock="true">
+                                <div class="flex items-start space-x-6">
+                                    <!-- Brazilian police operation image -->
+                                    <img src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&h=120" alt="Operação policial" class="w-32 h-20 object-cover rounded-lg" data-mock-image="true">
+                                    <div class="flex-1">
+                                        <div class="flex items-start justify-between">
+                                            <div>
+                                                <h3 class="text-xl font-semibold text-dark-blue mb-2" data-bind="news.title">Polícia Militar Realiza Prisão em Araruama: Homem Detido com Armas</h3>
+                                                <p class="text-gray-600 mb-3" data-bind="news.excerpt">Operação da PM resulta na prisão de suspeito por porte ilegal de arma de fogo no bairro Novo Horizonte...</p>
+                                                <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                                    <span><i class="fas fa-user mr-1"></i><span data-bind="news.author">Maria Silva</span></span>
+                                                    <span><i class="fas fa-calendar mr-1"></i><span data-bind="news.date">16 de dezembro de 2024</span></span>
+                                                    <span><i class="fas fa-eye mr-1"></i><span data-bind="news.views">1.2k</span> visualizações</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center space-x-3">
+                                                <span class="px-3 py-1 bg-secondary-blue text-white text-sm rounded-full" data-bind="news.category">Local</span>
+                                                <span class="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full" data-bind="news.status">Publicado</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center justify-end space-x-2 mt-4">
+                                            <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors" data-event="click:editNews" data-implementation="Open news editor">
+                                                <i class="fas fa-edit mr-2"></i>Editar
+                                            </button>
+                                            <button class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors" data-event="click:togglePublish">
+                                                <i class="fas fa-eye-slash mr-2"></i>Despublicar
+                                            </button>
+                                            <!-- @CONDITIONAL: Admin only -->
+                                            <button class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors" data-show-for-role="admin" data-event="click:deleteNews">
+                                                <i class="fas fa-trash mr-2"></i>Excluir
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- @END_MAP )) -->
+
+                            <div class="border rounded-lg p-6 hover:shadow-md transition-shadow" data-mock="true">
+                                <div class="flex items-start space-x-6">
+                                    <!-- Brazilian electoral voting system -->
+                                    <img src="https://images.unsplash.com/photo-1541872705-1f73c6400ec9?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&h=120" alt="Urna eletrônica brasileira" class="w-32 h-20 object-cover rounded-lg" data-mock-image="true">
+                                    <div class="flex-1">
+                                        <div class="flex items-start justify-between">
+                                            <div>
+                                                <h3 class="text-xl font-semibold text-dark-blue mb-2">Eleições Municipais 2024: A Hora da Mudança?</h3>
+                                                <p class="text-gray-600 mb-3">Com a proximidade das eleições municipais de 2024, os eleitores terão a chance de decidir o futuro de suas cidades...</p>
+                                                <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                                    <span><i class="fas fa-user mr-1"></i>João Santos</span>
+                                                    <span><i class="fas fa-calendar mr-1"></i>15 de dezembro de 2024</span>
+                                                    <span><i class="fas fa-eye mr-1"></i>845 visualizações</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center space-x-3">
+                                                <span class="px-3 py-1 bg-accent-yellow text-dark-blue text-sm rounded-full">Nacional</span>
+                                                <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-sm rounded-full">Rascunho</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center justify-end space-x-2 mt-4">
+                                            <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors" data-event="click:editNews">
+                                                <i class="fas fa-edit mr-2"></i>Editar
+                                            </button>
+                                            <button class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors" data-event="click:publishNews">
+                                                <i class="fas fa-eye mr-2"></i>Publicar
+                                            </button>
+                                            <button class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors" data-show-for-role="admin" data-event="click:deleteNews">
+                                                <i class="fas fa-trash mr-2"></i>Excluir
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="border rounded-lg p-6 hover:shadow-md transition-shadow" data-mock="true">
+                                <div class="flex items-start space-x-6">
+                                    <!-- Brazilian newsroom and journalism -->
+                                    <img src="https://images.unsplash.com/photo-1586339949916-3e9457bef6d3?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&h=120" alt="Redação jornalística" class="w-32 h-20 object-cover rounded-lg" data-mock-image="true">
+                                    <div class="flex-1">
+                                        <div class="flex items-start justify-between">
+                                            <div>
+                                                <h3 class="text-xl font-semibold text-dark-blue mb-2">MPRJ Acusa Ex-Secretário de Saúde de Cabo Frio por Manipulação</h3>
+                                                <p class="text-gray-600 mb-3">Ministério Público do Rio de Janeiro apresenta denúncia contra ex-gestor municipal por irregularidades...</p>
+                                                <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                                    <span><i class="fas fa-user mr-1"></i>Ana Costa</span>
+                                                    <span><i class="fas fa-calendar mr-1"></i>14 de dezembro de 2024</span>
+                                                    <span><i class="fas fa-eye mr-1"></i>2.1k visualizações</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center space-x-3">
+                                                <span class="px-3 py-1 bg-secondary-blue text-white text-sm rounded-full">Regional</span>
+                                                <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">Em Revisão</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center justify-end space-x-2 mt-4">
+                                            <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors" data-event="click:editNews">
+                                                <i class="fas fa-edit mr-2"></i>Editar
+                                            </button>
+                                            <button class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors" data-show-for-role="admin" data-event="click:approveNews">
+                                                <i class="fas fa-check mr-2"></i>Aprovar
+                                            </button>
+                                            <button class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors" data-show-for-role="admin" data-event="click:deleteNews">
+                                                <i class="fas fa-trash mr-2"></i>Excluir
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="flex items-center justify-between mt-8 pt-6 border-t">
+                            <div class="text-sm text-gray-500">
+                                Mostrando <span data-bind="pagination.showing">1-10</span> de <span data-bind="pagination.total">42</span> notícias
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="px-3 py-1 border rounded-lg hover:bg-gray-50" data-event="click:previousPage">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <button class="px-3 py-1 bg-secondary-blue text-white rounded-lg">1</button>
+                                <button class="px-3 py-1 border rounded-lg hover:bg-gray-50" data-event="click:goToPage:2">2</button>
+                                <button class="px-3 py-1 border rounded-lg hover:bg-gray-50" data-event="click:goToPage:3">3</button>
+                                <button class="px-3 py-1 border rounded-lg hover:bg-gray-50" data-event="click:nextPage">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: NewsManagementView -->
+
+            <!-- @COMPONENT: NewsEditorView [rich text editor for creating/editing news] -->
+            <div id="news-editor-view" class="hidden space-y-8">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-3xl font-bold text-dark-blue">Editor de Notícias</h1>
+                    <div class="flex space-x-4">
+                        <button class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors" data-event="click:saveDraft">
+                            <i class="fas fa-save mr-2"></i>
+                            Salvar Rascunho
+                        </button>
+                        <button class="bg-secondary-blue text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors" data-event="click:publishNews">
+                            <i class="fas fa-paper-plane mr-2"></i>
+                            Publicar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-md">
+                    <form class="p-6 space-y-6" data-event="submit:saveNews">
+                        <!-- News Metadata -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Título *</label>
+                                <input type="text" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-blue" placeholder="Digite o título da notícia..." data-bind="news.title" data-mock="true" value="Nova Notícia">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Categoria *</label>
+                                <select required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-blue" data-bind="news.category">
+                                    <option value="">Selecione uma categoria</option>
+                                    <option value="local" data-mock="true">Local</option>
+                                    <option value="regional" data-mock="true">Regional</option>
+                                    <option value="nacional" data-mock="true">Nacional</option>
+                                    <option value="internacional" data-mock="true">Internacional</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Resumo/Subtítulo</label>
+                            <textarea rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-blue" placeholder="Breve resumo da notícia..." data-bind="news.excerpt" data-mock="true">Resumo da notícia aqui...</textarea>
+                        </div>
+
+                        <!-- Image Upload -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Imagem Principal</label>
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-secondary-blue transition-colors">
+                                <div class="space-y-4">
+                                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400"></i>
+                                    <div>
+                                        <p class="text-gray-600">Arraste e solte uma imagem aqui ou</p>
+                                        <button type="button" class="text-secondary-blue font-medium hover:text-blue-700" data-event="click:selectImage" data-implementation="FileUpload component">
+                                            clique para selecionar
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-500">PNG, JPG, WEBP até 10MB</p>
+                                </div>
+                                <!-- Preview area -->
+                                <div id="image-preview" class="hidden mt-4">
+                                    <img src="" alt="Preview" class="max-w-xs mx-auto rounded-lg" data-implementation="Image preview after upload">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rich Text Editor -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Conteúdo da Notícia *</label>
+                            <!-- @FUNCTIONALITY: This should implement a rich text editor like TinyMCE or Quill.js -->
+                            <div class="border border-gray-300 rounded-lg">
+                                <!-- Editor Toolbar -->
+                                <div class="border-b p-2 flex flex-wrap gap-2 bg-gray-50 rounded-t-lg" data-implementation="Rich text editor toolbar">
+                                    <button type="button" class="p-2 hover:bg-gray-200 rounded" data-event="click:formatBold"><i class="fas fa-bold"></i></button>
+                                    <button type="button" class="p-2 hover:bg-gray-200 rounded" data-event="click:formatItalic"><i class="fas fa-italic"></i></button>
+                                    <button type="button" class="p-2 hover:bg-gray-200 rounded" data-event="click:formatUnderline"><i class="fas fa-underline"></i></button>
+                                    <div class="w-px bg-gray-300"></div>
+                                    <button type="button" class="p-2 hover:bg-gray-200 rounded" data-event="click:formatH1"><i class="fas fa-heading"></i>1</button>
+                                    <button type="button" class="p-2 hover:bg-gray-200 rounded" data-event="click:formatH2"><i class="fas fa-heading"></i>2</button>
+                                    <div class="w-px bg-gray-300"></div>
+                                    <button type="button" class="p-2 hover:bg-gray-200 rounded" data-event="click:insertLink"><i class="fas fa-link"></i></button>
+                                    <button type="button" class="p-2 hover:bg-gray-200 rounded" data-event="click:insertImage"><i class="fas fa-image"></i></button>
+                                    <button type="button" class="p-2 hover:bg-gray-200 rounded" data-event="click:insertQuote"><i class="fas fa-quote-right"></i></button>
+                                </div>
+                                <!-- Editor Content Area -->
+                                <div class="p-4 min-h-64 focus:outline-none focus:ring-2 focus:ring-secondary-blue" contenteditable="true" data-bind="news.content" data-implementation="Rich text editor content area" data-mock="true">
+                                    <p>Digite o conteúdo da notícia aqui...</p>
+                                    <p>Este editor suporta formatação rica, incluindo <strong>negrito</strong>, <em>itálico</em>, links e imagens.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Publishing Options -->
+                        <div class="bg-gray-50 rounded-lg p-6">
+                            <h3 class="text-lg font-medium text-dark-blue mb-4">Opções de Publicação</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                                    <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-blue" data-bind="news.status">
+                                        <option value="draft" data-mock="true">Rascunho</option>
+                                        <option value="review" data-mock="true">Em Revisão</option>
+                                        <option value="published" data-mock="true">Publicado</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Data de Publicação</label>
+                                    <input type="datetime-local" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-blue" data-bind="news.publishDate">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                                    <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-blue" placeholder="política, segurança, local" data-bind="news.tags">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex justify-end space-x-4 pt-6 border-t">
+                            <button type="button" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" data-event="click:cancelEdit">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="px-6 py-3 bg-secondary-blue text-white rounded-lg hover:bg-blue-600 transition-colors" data-event="click:saveNews">
+                                Salvar Notícia
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: NewsEditorView -->
+
+            <!-- @COMPONENT: UserManagementView [admin only] -->
+            <div id="user-management-view" class="hidden space-y-8" data-show-for-role="admin">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-3xl font-bold text-dark-blue">Gerenciar Usuários</h1>
+                    <button class="bg-secondary-blue text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors" data-event="click:addUser">
+                        <i class="fas fa-user-plus mr-2"></i>
+                        Novo Usuário
+                    </button>
+                </div>
+
+                <!-- User Statistics -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 bg-blue-100 rounded-full">
+                                <i class="fas fa-users text-secondary-blue text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-sm font-medium text-gray-500">Total de Usuários</h3>
+                                <p class="text-2xl font-bold text-dark-blue" data-bind="userStats.total">12</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 bg-green-100 rounded-full">
+                                <i class="fas fa-user-shield text-green-500 text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-sm font-medium text-gray-500">Administradores</h3>
+                                <p class="text-2xl font-bold text-dark-blue" data-bind="userStats.admins">3</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 bg-yellow-100 rounded-full">
+                                <i class="fas fa-user-edit text-accent-yellow text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-sm font-medium text-gray-500">Editores</h3>
+                                <p class="text-2xl font-bold text-dark-blue" data-bind="userStats.editors">9</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User List -->
+                <div class="bg-white rounded-xl shadow-md">
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <!-- @MAP: users.map(user => ( -->
+                            <div class="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow" data-mock="true">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-12 h-12 bg-secondary-blue rounded-full flex items-center justify-center text-white font-semibold">
+                                        MS
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-dark-blue" data-bind="user.name">Maria Silva</h3>
+                                        <p class="text-sm text-gray-500" data-bind="user.email">maria.silva@portal.com</p>
+                                        <p class="text-xs text-gray-400">Último acesso: <span data-bind="user.lastLogin">16/12/2024 às 14:30</span></p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <span class="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full" data-bind="user.role">Administrador</span>
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">Ativo</span>
+                                    <div class="flex space-x-2">
+                                        <button class="text-blue-600 hover:text-blue-800" data-event="click:editUser">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="text-red-600 hover:text-red-800" data-event="click:deleteUser">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- @END_MAP )) -->
+
+                            <div class="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow" data-mock="true">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-12 h-12 bg-accent-yellow rounded-full flex items-center justify-center text-dark-blue font-semibold">
+                                        JS
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-dark-blue">João Santos</h3>
+                                        <p class="text-sm text-gray-500">joao.santos@portal.com</p>
+                                        <p class="text-xs text-gray-400">Último acesso: 15/12/2024 às 18:45</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-sm rounded-full">Editor</span>
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">Ativo</span>
+                                    <div class="flex space-x-2">
+                                        <button class="text-blue-600 hover:text-blue-800" data-event="click:editUser">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="text-red-600 hover:text-red-800" data-event="click:deleteUser">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow" data-mock="true">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-12 h-12 bg-gray-400 rounded-full flex items-center justify-center text-white font-semibold">
+                                        AC
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-dark-blue">Ana Costa</h3>
+                                        <p class="text-sm text-gray-500">ana.costa@portal.com</p>
+                                        <p class="text-xs text-gray-400">Último acesso: 10/12/2024 às 09:15</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-sm rounded-full">Editor</span>
+                                    <span class="px-3 py-1 bg-gray-100 text-gray-800 text-sm rounded-full">Inativo</span>
+                                    <div class="flex space-x-2">
+                                        <button class="text-blue-600 hover:text-blue-800" data-event="click:editUser">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="text-green-600 hover:text-green-800" data-event="click:activateUser">
+                                            <i class="fas fa-user-check"></i>
+                                        </button>
+                                        <button class="text-red-600 hover:text-red-800" data-event="click:deleteUser">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: UserManagementView -->
+
+        </main>
+        <!-- @END_COMPONENT: MainContent -->
+    </div>
+
+    <!-- @COMPONENT: PublicPortalPreview [modal showing public interface] -->
+    <div id="public-portal-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
+                <h2 class="text-xl font-semibold text-dark-blue">Portal Público - Preview</h2>
+                <button class="text-gray-500 hover:text-gray-700" data-event="click:closePublicPreview">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Public Portal Content -->
+            <div class="p-6">
+                <!-- Public Header -->
+                <header class="bg-primary-orange mb-8 rounded-lg">
+                    <div class="py-3 bg-gray-100 rounded-t-lg">
+                        <div class="px-6 flex justify-between items-center text-sm">
+                            <span class="text-gray-600">sábado, dezembro 16, 2024</span>
+                            <div class="flex space-x-4">
+                                <a href="#" class="text-gray-600 hover:text-primary-orange"><i class="fab fa-facebook-f"></i></a>
+                                <a href="#" class="text-gray-600 hover:text-primary-orange"><i class="fab fa-instagram"></i></a>
+                                <a href="#" class="text-gray-600 hover:text-primary-orange"><i class="fab fa-twitter"></i></a>
+                                <a href="#" class="text-gray-600 hover:text-primary-orange"><i class="fab fa-youtube"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="px-6 py-6">
+                        <h1 class="text-4xl font-bold text-white text-center mb-2">PORTAL NOTÍCIAS</h1>
+                        <p class="text-white/90 text-center">Notícias Locais, Regionais e Nacionais</p>
+                    </div>
+                    
+                    <nav class="bg-accent-yellow rounded-b-lg">
+                        <div class="px-6">
+                            <ul class="flex space-x-8 py-3">
+                                <li><a href="#" class="text-dark-blue font-medium hover:text-primary-orange">INÍCIO</a></li>
+                                <li><a href="#" class="text-dark-blue font-medium hover:text-primary-orange">LOCAL</a></li>
+                                <li><a href="#" class="text-dark-blue font-medium hover:text-primary-orange">REGIONAL</a></li>
+                                <li><a href="#" class="text-dark-blue font-medium hover:text-primary-orange">NACIONAL</a></li>
+                                <li><a href="#" class="text-dark-blue font-medium hover:text-primary-orange">INTERNACIONAL</a></li>
+                            </ul>
+                        </div>
+                    </nav>
+                </header>
+
+                <!-- Featured News -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                    <!-- Main Featured News -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-xl shadow-lg overflow-hidden" data-mock="true">
+                            <!-- Brazilian lake landscape with swan boats like reference image -->
+                            <img src="https://pixabay.com/get/g18d7b7823304b9410155f232b5a08f7d08333c234ef58fe346ce5441007adb4486f24735dbc6c24774bfe76e4dc132a2bdc2c00545e4093a0543028e674b6da3_1280.jpg" alt="Lagoa com pedalinhos em formato de cisne" class="w-full h-64 object-cover">
+                            <div class="p-6">
+                                <div class="flex items-center space-x-2 mb-3">
+                                    <span class="bg-secondary-blue text-white px-3 py-1 text-sm rounded-full">LOCAL</span>
+                                    <span class="text-gray-500 text-sm">16 de dezembro de 2024</span>
+                                </div>
+                                <h2 class="text-2xl font-bold text-dark-blue mb-3">Lagoa de Araruama Recebe Nova Frota de Pedalinhos</h2>
+                                <p class="text-gray-600 mb-4">Prefeitura investe em turismo local com novos equipamentos aquáticos para lazer da população e visitantes...</p>
+                                <a href="#" class="text-secondary-blue font-medium hover:text-blue-700">Leia mais →</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Side News -->
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden" data-mock="true">
+                            <!-- Police operation image -->
+                            <img src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=200" alt="Operação policial" class="w-full h-32 object-cover">
+                            <div class="p-4">
+                                <span class="bg-secondary-blue text-white px-2 py-1 text-xs rounded-full">LOCAL</span>
+                                <h3 class="font-semibold text-dark-blue mt-2 mb-2">PM Realiza Prisão no Novo Horizonte</h3>
+                                <p class="text-gray-600 text-sm">Suspeito detido por porte ilegal de arma...</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden" data-mock="true">
+                            <!-- Electoral voting system -->
+                            <img src="https://images.unsplash.com/photo-1541872705-1f73c6400ec9?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=200" alt="Eleições municipais" class="w-full h-32 object-cover">
+                            <div class="p-4">
+                                <span class="bg-accent-yellow text-dark-blue px-2 py-1 text-xs rounded-full">NACIONAL</span>
+                                <h3 class="font-semibold text-dark-blue mt-2 mb-2">Eleições 2024: Candidatos se Preparam</h3>
+                                <p class="text-gray-600 text-sm">Campanha eleitoral ganha força nas cidades...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- News Categories -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Local News -->
+                    <div>
+                        <div class="bg-secondary-blue text-white p-3 rounded-t-lg">
+                            <h3 class="font-semibold">Notícias Locais</h3>
+                        </div>
+                        <div class="bg-white rounded-b-lg shadow-md p-4">
+                            <div class="space-y-4">
+                                <div class="flex items-start space-x-3 pb-3 border-b" data-mock="true">
+                                    <img src="https://images.unsplash.com/photo-1586339949916-3e9457bef6d3?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=80&h=60" alt="Medida protetiva" class="w-16 h-12 object-cover rounded">
+                                    <div class="flex-1">
+                                        <h4 class="font-medium text-dark-blue text-sm">Medida Protetiva Violada em Campos</h4>
+                                        <p class="text-xs text-gray-500 mt-1">13 de dezembro de 2024</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start space-x-3 pb-3 border-b" data-mock="true">
+                                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=80&h=60" alt="Homem lendo jornal" class="w-16 h-12 object-cover rounded">
+                                    <div class="flex-1">
+                                        <h4 class="font-medium text-dark-blue text-sm">MPRJ Acusa Ex-Secretário de Saúde</h4>
+                                        <p class="text-xs text-gray-500 mt-1">12 de dezembro de 2024</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Regional News -->
+                    <div>
+                        <div class="bg-accent-yellow text-dark-blue p-3 rounded-t-lg">
+                            <h3 class="font-semibold">Notícias Regionais</h3>
+                        </div>
+                        <div class="bg-white rounded-b-lg shadow-md p-4">
+                            <div class="space-y-4">
+                                <div class="flex items-start space-x-3 pb-3 border-b" data-mock="true">
+                                    <!-- Brazilian court/justice system -->
+                                    <img src="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=80&h=60" alt="Tribunal de justiça" class="w-16 h-12 object-cover rounded">
+                                    <div class="flex-1">
+                                        <h4 class="font-medium text-dark-blue text-sm">Justiça Determina Afastamento de Prefeita</h4>
+                                        <p class="text-xs text-gray-500 mt-1">11 de dezembro de 2024</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start space-x-3 pb-3 border-b" data-mock="true">
+                                    <!-- Football/soccer in Brazil -->
+                                    <img src="https://images.unsplash.com/photo-1522778119026-d647f0596c20?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=80&h=60" alt="Futebol brasileiro" class="w-16 h-12 object-cover rounded">
+                                    <div class="flex-1">
+                                        <h4 class="font-medium text-dark-blue text-sm">Ex-Jogador de Futebol é Preso</h4>
+                                        <p class="text-xs text-gray-500 mt-1">10 de dezembro de 2024</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: PublicPortalPreview -->
+
+    <script>
+        // TODO: Implement business logic, API calls, and state management
+        (function() {
+            'use strict';
+            
+            // Simple navigation simulation
+            let currentView = 'dashboard';
+            const views = ['dashboard', 'news-management', 'news-editor', 'user-management'];
+            
+            function showView(viewName) {
+                views.forEach(view => {
+                    const element = document.getElementById(view + '-view');
+                    if (element) {
+                        element.classList.add('hidden');
+                    }
+                });
+                
+                const targetView = document.getElementById(viewName + '-view');
+                if (targetView) {
+                    targetView.classList.remove('hidden');
+                    currentView = viewName;
+                }
+            }
+            
+            // Navigation event handlers
+            document.addEventListener('click', function(e) {
+                const target = e.target.closest('[data-event]');
+                if (!target) return;
+                
+                const event = target.getAttribute('data-event');
+                
+                if (event.includes('setActiveView:')) {
+                    const viewName = event.split(':')[1];
+                    showView(viewName);
+                    
+                    // Update active navigation item
+                    document.querySelectorAll('aside a').forEach(a => {
+                        a.classList.remove('active:bg-blue-50', 'active:text-secondary-blue');
+                    });
+                    target.classList.add('active:bg-blue-50', 'active:text-secondary-blue');
+                }
+                
+                if (event === 'click:openPublicPortal') {
+                    document.getElementById('public-portal-modal').classList.remove('hidden');
+                }
+                
+                if (event === 'click:closePublicPreview') {
+                    document.getElementById('public-portal-modal').classList.add('hidden');
+                }
+                
+                // Prevent default for demo links
+                if (target.tagName === 'A' && target.getAttribute('href') === '#') {
+                    e.preventDefault();
+                }
+            });
+            
+            // Initialize with dashboard view
+            showView('dashboard');
+            
+        })();
+    </script>
+</body>
+</html>
