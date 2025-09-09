@@ -37,6 +37,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Vercel requires us to export the Express app for serverless functions
+export default app;
+
 (async () => {
   const server = await registerRoutes(app);
 
@@ -55,15 +58,19 @@ app.use((req, res, next) => {
     await setupVite(app, server);
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+  // For Vercel, we don't start the server here
+  // Vercel will handle starting the server
+  if (process.env.VERCEL !== "1") {
+    // ALWAYS serve the app on the port specified in the environment variable PORT
+    // Other ports are firewalled. Default to 5000 if not specified.
+    // this serves both the API and the client.
+    // It is the only port that is not firewalled.
+    const port = parseInt(process.env.PORT || '5000', 10);
+    server.listen({
+      port,
+      host: "0.0.0.0",
+    }, () => {
+      log(`serving on port ${port}`);
+    });
+  }
 })();

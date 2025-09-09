@@ -13,8 +13,8 @@ import {
   type ArticleWithRelations,
   type SavedArticle,
   type InsertSavedArticle,
-} from "@shared/schema";
-import { db } from "./db";
+} from "../shared/schema.ts";
+import { db } from "./db.ts";
 import { eq, desc, asc, like, and, or, sql } from "drizzle-orm";
 
 export interface IStorage {
