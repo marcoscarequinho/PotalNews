@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import RichTextEditor from "./RichTextEditor";
-import { ObjectUploader } from "@/components/ObjectUploader";
 import { apiRequest } from "@/lib/queryClient";
 
 const articleSchema = z.object({
@@ -18,6 +17,7 @@ const articleSchema = z.object({
   content: z.string().min(1, "Conteúdo é obrigatório"),
   categoryId: z.string().min(1, "Categoria é obrigatória"),
   imageUrl: z.string().optional(),
+  videoUrl: z.string().url().optional(),
   status: z.enum(["draft", "review", "published"]).default("draft"),
   tags: z.string().optional(),
 });
@@ -32,14 +32,14 @@ interface NewsFormProps {
   isLoading?: boolean;
 }
 
-export default function NewsForm({ 
-  initialData, 
-  categories, 
-  onSubmit, 
-  onCancel, 
-  isLoading = false 
+export default function NewsForm({
+  initialData,
+  categories,
+  onSubmit,
+  onCancel,
+  isLoading = false,
 }: NewsFormProps) {
-  const [imageUrl, setImageUrl] = useState(initialData?.imageUrl || "");
+  const [imageUrl, setImageUrl] = useState<string>(initialData?.imageUrl || "");
 
   const form = useForm<ArticleFormData>({
     resolver: zodResolver(articleSchema),
@@ -49,38 +49,32 @@ export default function NewsForm({
       content: initialData?.content || "",
       categoryId: initialData?.categoryId || "",
       imageUrl: initialData?.imageUrl || "",
+      videoUrl: initialData?.videoUrl || "",
       status: initialData?.status || "draft",
       tags: initialData?.tags || "",
     },
   });
 
-  const handleImageUpload = async () => {
-    try {
-      const response = await apiRequest("POST", "/api/objects/upload");
-      const data = await response.json();
-      return {
-        method: "PUT" as const,
-        url: data.uploadURL,
-      };
-    } catch (error) {
-      console.error("Error getting upload URL:", error);
-      throw error;
-    }
-  };
+  const handleLocalImageUpload = async (file: File) => {
+    const toDataURL = (f: File) =>
+      new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = reject;
+        reader.readAsDataURL(f);
+      });
 
-  const handleImageComplete = async (result: any) => {
-    if (result.successful && result.successful.length > 0) {
-      const uploadedFile = result.successful[0];
-      try {
-        const response = await apiRequest("PUT", "/api/article-images", {
-          imageURL: uploadedFile.uploadURL,
-        });
-        const data = await response.json();
-        setImageUrl(data.objectPath);
-        form.setValue("imageUrl", data.objectPath);
-      } catch (error) {
-        console.error("Error setting image ACL:", error);
-      }
+    const dataUrl = await toDataURL(file);
+    const resp = await apiRequest("POST", "/api/uploads/images", {
+      filename: file.name,
+      data: dataUrl,
+    });
+    const json = await resp.json();
+    if (resp.ok && json.url) {
+      setImageUrl(json.url);
+      form.setValue("imageUrl", json.url);
+    } else {
+      throw new Error(json?.message || "Falha ao fazer upload da imagem");
     }
   };
 
@@ -144,10 +138,10 @@ export default function NewsForm({
                 <FormItem>
                   <FormLabel>Resumo/Subtítulo</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Breve resumo da notícia..." 
-                      rows={3} 
-                      {...field} 
+                    <Textarea
+                      placeholder="Breve resumo da notícia..."
+                      rows={3}
+                      {...field}
                       data-testid="textarea-excerpt"
                     />
                   </FormControl>
@@ -160,30 +154,30 @@ export default function NewsForm({
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Imagem Principal</label>
               <div className="space-y-4">
-                <ObjectUploader
-                  maxNumberOfFiles={1}
-                  maxFileSize={10485760}
-                  onGetUploadParameters={handleImageUpload}
-                  onComplete={handleImageComplete}
-                  buttonClassName="w-full border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-secondary-blue transition-colors"
-                >
-                  <div className="text-center space-y-4">
-                    <i className="fas fa-cloud-upload-alt text-4xl text-gray-400"></i>
-                    <div>
-                      <p className="text-gray-600">Arraste e solte uma imagem aqui ou</p>
-                      <span className="text-secondary-blue font-medium hover:text-blue-700">
-                        clique para selecionar
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500">PNG, JPG, WEBP até 10MB</p>
-                  </div>
-                </ObjectUploader>
-                
+                <div className="space-y-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const f = e.target.files?.[0];
+                      if (f) {
+                        try {
+                          await handleLocalImageUpload(f);
+                        } catch (err) {
+                          console.error(err);
+                        }
+                      }
+                    }}
+                    className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-secondary-blue file:text-white hover:file:bg-blue-600"
+                  />
+                  <p className="text-xs text-gray-500">PNG, JPG, WEBP até 10MB</p>
+                </div>
+
                 {imageUrl && (
                   <div className="mt-4">
-                    <img 
-                      src={imageUrl} 
-                      alt="Preview" 
+                    <img
+                      src={imageUrl}
+                      alt="Preview"
                       className="max-w-xs rounded-lg"
                       data-testid="img-preview"
                     />
@@ -191,6 +185,25 @@ export default function NewsForm({
                 )}
               </div>
             </div>
+
+            {/* Video URL */}
+            <FormField
+              control={form.control}
+              name="videoUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>URL do Vídeo (opcional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Cole a URL do vídeo (YouTube, Vimeo, etc.)"
+                      {...field}
+                      data-testid="input-video-url"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {/* Content Editor */}
             <FormField
@@ -244,9 +257,9 @@ export default function NewsForm({
                     <FormItem>
                       <FormLabel>Tags</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="política, segurança, local" 
-                          {...field} 
+                        <Input
+                          placeholder="política, segurança, local"
+                          {...field}
                           data-testid="input-tags"
                         />
                       </FormControl>
@@ -293,3 +306,4 @@ export default function NewsForm({
     </Card>
   );
 }
+

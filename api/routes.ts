@@ -1,7 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { promises as fs } from "fs";
+import path from "path";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth } from "./replitAuth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
 import { insertCategorySchema, insertArticleSchema, updateArticleSchema } from "@shared/schema";
@@ -107,6 +109,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Category routes
+  app.get('/api/features', async (_req, res) => {
+    try {
+      // uploadsEnabled se PRIVATE_OBJECT_DIR estiver configurado
+      let uploadsEnabled = true;
+      try {
+        const svc = new ObjectStorageService();
+        svc.getPrivateObjectDir();
+      } catch {
+        uploadsEnabled = false;
+      }
+      res.json({ uploadsEnabled });
+    } catch (e) {
+      res.json({ uploadsEnabled: false });
+    }
+  });
+
   app.get('/api/categories', async (req, res) => {
     try {
       const categories = await storage.getCategories();
@@ -117,8 +135,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create a custom isAuthenticated middleware for our system
-  const isAuthenticated = async (req: any, res: any, next: any) => {
+  // Create a custom auth middleware for our system
+  const requireAuth = async (req: any, res: any, next: any) => {
     try {
       if (!(req.session as any)?.userId) {
         return res.status(401).json({ message: "Login necessário" });
@@ -251,7 +269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/articles', isAuthenticated, async (req: any, res) => {
+  app.post('/api/articles', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
 
@@ -271,7 +289,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/articles/:id', isAuthenticated, async (req: any, res) => {
+  app.put('/api/articles/:id', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
 
@@ -303,8 +321,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/articles/:id', isAdmin, async (req: any, res) => {
+  // Allow admins or the article author to delete
+  app.delete('/api/articles/:id', requireAuth, async (req: any, res) => {
     try {
+      const article = await storage.getArticleById(req.params.id);
+      if (!article) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      const isOwner = article.authorId === req.user.id;
+      const isAdminUser = req.user.role === 'admin';
+      if (!isAdminUser && !isOwner) {
+        return res.status(403).json({ message: "Not authorized to delete this article" });
+      }
 
       const success = await storage.deleteArticle(req.params.id);
       if (!success) {
@@ -319,7 +348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Statistics route
-  app.get('/api/stats', isAuthenticated, async (req: any, res) => {
+  app.get('/api/stats', requireAuth, async (req: any, res) => {
     try {
       const stats = await storage.getStats();
       res.json(stats);
@@ -430,13 +459,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Object storage routes for image uploads
-  app.post("/api/objects/upload", isAuthenticated, async (req, res) => {
+  app.post("/api/objects/upload", requireAuth, async (req, res) => {
     const objectStorageService = new ObjectStorageService();
     const uploadURL = await objectStorageService.getObjectEntityUploadURL();
     res.json({ uploadURL });
   });
 
-  app.put("/api/article-images", isAuthenticated, async (req: any, res) => {
+  app.put("/api/article-images", requireAuth, async (req: any, res) => {
     if (!req.body.imageURL) {
       return res.status(400).json({ error: "imageURL is required" });
     }
@@ -462,6 +491,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Local image upload fallback (base64 JSON payload)
+  // Accepts: { filename: string, data: string (base64) }
+  app.post("/api/uploads/images", requireAuth, async (req: any, res) => {
+    try {
+      const { filename, data } = req.body || {};
+      if (!filename || !data) {
+        return res.status(400).json({ message: "filename e data (base64) são obrigatórios" });
+      }
+
+      const uploadDir = path.resolve("uploads", "images");
+      await fs.mkdir(uploadDir, { recursive: true });
+
+      const safeName = filename.replace(/[^a-zA-Z0-9_.-]+/g, "-");
+      const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const finalName = `${unique}-${safeName}`;
+      const filePath = path.join(uploadDir, finalName);
+
+      // data may come like: data:image/png;base64,AAAA... or plain base64
+      const base64 = String(data).includes(",") ? String(data).split(",", 2)[1] : String(data);
+      const buffer = Buffer.from(base64, "base64");
+      await fs.writeFile(filePath, buffer);
+
+      const urlPath = `/uploads/images/${finalName}`;
+      return res.status(201).json({ url: urlPath });
+    } catch (err) {
+      console.error("Error uploading image locally:", err);
+      return res.status(500).json({ message: "Falha ao fazer upload da imagem" });
+    }
+  });
+
   app.get("/objects/:objectPath(*)", async (req, res) => {
     const objectStorageService = new ObjectStorageService();
     try {
@@ -479,7 +538,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Saved articles endpoints (read later functionality)
-  app.post("/api/articles/:id/save", isAuthenticated, async (req: any, res) => {
+  app.post("/api/articles/:id/save", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user?.id;
       const articleId = req.params.id;
@@ -496,7 +555,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/articles/:id/save", isAuthenticated, async (req: any, res) => {
+  app.delete("/api/articles/:id/save", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user?.id;
       const articleId = req.params.id;
@@ -517,7 +576,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/saved-articles", isAuthenticated, async (req: any, res) => {
+  app.get("/api/saved-articles", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user?.id;
       
@@ -533,7 +592,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/articles/:id/is-saved", isAuthenticated, async (req: any, res) => {
+  app.get("/api/articles/:id/is-saved", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user?.id;
       const articleId = req.params.id;

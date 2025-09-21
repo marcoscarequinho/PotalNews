@@ -20,14 +20,25 @@ export default function NewsManagement() {
   
   const [filters, setFilters] = useState({
     search: "",
-    category: "",
-    status: "",
+    category: "all",
+    status: "all",
     author: "",
   });
 
   const { data: articles = [], isLoading: articlesLoading } = useQuery<ArticleWithRelations[]>({
     queryKey: ["/api/articles", filters],
     enabled: isAuthenticated,
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters.search) params.append('search', filters.search);
+      if (filters.category && filters.category !== 'all') params.append('categoryId', filters.category);
+      if (filters.status && filters.status !== 'all') params.append('status', filters.status);
+      if (filters.author) params.append('authorId', filters.author);
+
+      const url = `/api/articles?${params.toString()}`;
+      const response = await apiRequest("GET", url);
+      return response.json();
+    },
   });
 
   // Redirect to login if not authenticated
@@ -168,7 +179,7 @@ export default function NewsManagement() {
                     <SelectValue placeholder="Todas as categorias" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas as categorias</SelectItem>
+                    <SelectItem value="all">Todas as categorias</SelectItem>
                     {categories?.map((category: any) => (
                       <SelectItem key={category.id} value={category.id}>
                         {category.name}
@@ -184,7 +195,7 @@ export default function NewsManagement() {
                     <SelectValue placeholder="Todos os status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos os status</SelectItem>
+                    <SelectItem value="all">Todos os status</SelectItem>
                     <SelectItem value="published">Publicado</SelectItem>
                     <SelectItem value="draft">Rascunho</SelectItem>
                     <SelectItem value="review">Em Revisão</SelectItem>
@@ -265,7 +276,7 @@ export default function NewsManagement() {
                             <i className={`fas ${article.status === 'published' ? 'fa-eye-slash' : 'fa-eye'} mr-2`}></i>
                             {article.status === 'published' ? 'Despublicar' : 'Publicar'}
                           </Button>
-                          {user?.role === 'admin' && (
+                          {(user?.role === 'admin' || article.authorId === user?.id) && (
                             <Button
                               variant="destructive"
                               size="sm"

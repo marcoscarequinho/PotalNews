@@ -11,6 +11,7 @@ import NewsManagement from "@/pages/NewsManagement";
 import NewsEditor from "@/pages/NewsEditor";
 import NewsView from "@/pages/NewsView";
 import UserManagement from "@/pages/UserManagement";
+import CategoriesManagement from "@/pages/CategoriesManagement";
 import PublicPortal from "@/pages/PublicPortal";
 import { SavedArticles } from "@/pages/SavedArticles";
 import NotFound from "@/pages/not-found";
@@ -52,6 +53,8 @@ function Router() {
           <Route path="/admin/news/edit/:id" component={NewsEditor} />
           <Route path="/users" component={UserManagement} />
           <Route path="/admin/users" component={UserManagement} />
+          <Route path="/categories" component={CategoriesManagement} />
+          <Route path="/admin/categories" component={CategoriesManagement} />
         </>
       ) : isAuthenticated ? (
         // Non-admin authenticated users get redirected to access denied

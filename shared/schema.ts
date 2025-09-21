@@ -55,6 +55,7 @@ export const articles = pgTable("articles", {
   excerpt: text("excerpt"),
   content: text("content").notNull(),
   imageUrl: varchar("image_url"),
+  videoUrl: varchar("video_url"),
   status: varchar("status", { enum: ["draft", "review", "published"] }).notNull().default("draft"),
   categoryId: varchar("category_id").notNull(),
   authorId: varchar("author_id").notNull(),

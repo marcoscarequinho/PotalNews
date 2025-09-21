@@ -1,10 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { useState } from "react";
 import PublicLayout from "@/components/Layout/PublicLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import type { ArticleWithRelations } from "@shared/schema";
 
 export default function PublicPortal() {
+  const [activeSection, setActiveSection] = useState<string>('inicio');
+
   const { data: articles, isLoading: articlesLoading } = useQuery<ArticleWithRelations[]>({
     queryKey: ["/api/articles/published"],
   });
@@ -18,6 +21,20 @@ export default function PublicPortal() {
   const sideArticles = articlesArray.slice(1, 3);
   const localNews = articlesArray.filter((article: any) => article.category?.slug === 'local').slice(0, 3);
   const regionalNews = articlesArray.filter((article: any) => article.category?.slug === 'regional').slice(0, 3);
+  const nationalNews = articlesArray.filter((article: any) => article.category?.slug === 'nacional').slice(0, 3);
+  const internationalNews = articlesArray.filter((article: any) => article.category?.slug === 'internacional').slice(0, 3);
+
+  const scrollToSection = (sectionId: string) => {
+    setActiveSection(sectionId);
+    if (sectionId === 'inicio') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
 
   return (
     <PublicLayout>
@@ -74,11 +91,51 @@ export default function PublicPortal() {
         <nav className="bg-accent-yellow">
           <div className="max-w-7xl mx-auto px-4">
             <ul className="flex space-x-8 py-3">
-              <li><a href="#" className="text-dark-blue font-medium hover:text-primary-orange transition-colors" data-testid="nav-home">INÍCIO</a></li>
-              <li><a href="#" className="text-dark-blue font-medium hover:text-primary-orange transition-colors" data-testid="nav-local">LOCAL</a></li>
-              <li><a href="#" className="text-dark-blue font-medium hover:text-primary-orange transition-colors" data-testid="nav-regional">REGIONAL</a></li>
-              <li><a href="#" className="text-dark-blue font-medium hover:text-primary-orange transition-colors" data-testid="nav-national">NACIONAL</a></li>
-              <li><a href="#" className="text-dark-blue font-medium hover:text-primary-orange transition-colors" data-testid="nav-international">INTERNACIONAL</a></li>
+              <li>
+                <button
+                  onClick={() => scrollToSection('inicio')}
+                  className={`text-dark-blue font-medium hover:text-primary-orange transition-colors ${activeSection === 'inicio' ? 'text-primary-orange' : ''}`}
+                  data-testid="nav-home"
+                >
+                  INÍCIO
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => scrollToSection('local')}
+                  className={`text-dark-blue font-medium hover:text-primary-orange transition-colors ${activeSection === 'local' ? 'text-primary-orange' : ''}`}
+                  data-testid="nav-local"
+                >
+                  LOCAL
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => scrollToSection('regional')}
+                  className={`text-dark-blue font-medium hover:text-primary-orange transition-colors ${activeSection === 'regional' ? 'text-primary-orange' : ''}`}
+                  data-testid="nav-regional"
+                >
+                  REGIONAL
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => scrollToSection('nacional')}
+                  className={`text-dark-blue font-medium hover:text-primary-orange transition-colors ${activeSection === 'nacional' ? 'text-primary-orange' : ''}`}
+                  data-testid="nav-national"
+                >
+                  NACIONAL
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => scrollToSection('internacional')}
+                  className={`text-dark-blue font-medium hover:text-primary-orange transition-colors ${activeSection === 'internacional' ? 'text-primary-orange' : ''}`}
+                  data-testid="nav-international"
+                >
+                  INTERNACIONAL
+                </button>
+              </li>
             </ul>
           </div>
         </nav>
@@ -169,9 +226,9 @@ export default function PublicPortal() {
             {/* News Categories */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Local News */}
-              <div>
+              <div id="local">
                 <div className="bg-secondary-blue text-white p-3 rounded-t-lg">
-                  <h3 className="font-semibold" data-testid="text-local-news-title">Notícias Locais</h3>
+                  <h3 className="font-semibold" data-testid="text-local-news-title">Noticias Local</h3>
                 </div>
                 <Card className="rounded-t-none">
                   <CardContent className="p-4">
@@ -180,14 +237,16 @@ export default function PublicPortal() {
                         {localNews.map((article: any) => (
                           <div key={article.id} className="flex items-start space-x-3 pb-3 border-b last:border-b-0" data-testid={`card-local-article-${article.id}`}>
                             {article.imageUrl && (
-                              <img 
-                                src={article.imageUrl} 
+                              <img
+                                src={article.imageUrl}
                                 alt={article.title}
                                 className="w-16 h-12 object-cover rounded"
                               />
                             )}
                             <div className="flex-1">
-                              <h4 className="font-medium text-dark-blue text-sm">{article.title}</h4>
+                              <Link href={`/news/${article.id}`}>
+                                <h4 className="font-medium text-dark-blue text-sm hover:text-blue-700 cursor-pointer transition-colors">{article.title}</h4>
+                              </Link>
                               <p className="text-xs text-gray-500 mt-1">
                                 {article.createdAt ? new Date(article.createdAt).toLocaleDateString('pt-BR') : ''}
                               </p>
@@ -203,7 +262,7 @@ export default function PublicPortal() {
               </div>
 
               {/* Regional News */}
-              <div>
+              <div id="regional">
                 <div className="bg-accent-yellow text-dark-blue p-3 rounded-t-lg">
                   <h3 className="font-semibold" data-testid="text-regional-news-title">Notícias Regionais</h3>
                 </div>
@@ -214,14 +273,16 @@ export default function PublicPortal() {
                         {regionalNews.map((article: any) => (
                           <div key={article.id} className="flex items-start space-x-3 pb-3 border-b last:border-b-0" data-testid={`card-regional-article-${article.id}`}>
                             {article.imageUrl && (
-                              <img 
-                                src={article.imageUrl} 
+                              <img
+                                src={article.imageUrl}
                                 alt={article.title}
                                 className="w-16 h-12 object-cover rounded"
                               />
                             )}
                             <div className="flex-1">
-                              <h4 className="font-medium text-dark-blue text-sm">{article.title}</h4>
+                              <Link href={`/news/${article.id}`}>
+                                <h4 className="font-medium text-dark-blue text-sm hover:text-blue-700 cursor-pointer transition-colors">{article.title}</h4>
+                              </Link>
                               <p className="text-xs text-gray-500 mt-1">
                                 {article.createdAt ? new Date(article.createdAt).toLocaleDateString('pt-BR') : ''}
                               </p>
@@ -231,6 +292,78 @@ export default function PublicPortal() {
                       </div>
                     ) : (
                       <p className="text-gray-500 text-center py-4">Nenhuma notícia regional disponível</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* National News */}
+              <div id="nacional">
+                <div className="bg-green-600 text-white p-3 rounded-t-lg">
+                  <h3 className="font-semibold" data-testid="text-national-news-title">Notícias Nacionais</h3>
+                </div>
+                <Card className="rounded-t-none">
+                  <CardContent className="p-4">
+                    {nationalNews.length > 0 ? (
+                      <div className="space-y-4">
+                        {nationalNews.map((article: any) => (
+                          <div key={article.id} className="flex items-start space-x-3 pb-3 border-b last:border-b-0" data-testid={`card-national-article-${article.id}`}>
+                            {article.imageUrl && (
+                              <img
+                                src={article.imageUrl}
+                                alt={article.title}
+                                className="w-16 h-12 object-cover rounded"
+                              />
+                            )}
+                            <div className="flex-1">
+                              <Link href={`/news/${article.id}`}>
+                                <h4 className="font-medium text-dark-blue text-sm hover:text-blue-700 cursor-pointer transition-colors">{article.title}</h4>
+                              </Link>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {article.createdAt ? new Date(article.createdAt).toLocaleDateString('pt-BR') : ''}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-center py-4">Nenhuma notícia nacional disponível</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* International News */}
+              <div id="internacional">
+                <div className="bg-purple-600 text-white p-3 rounded-t-lg">
+                  <h3 className="font-semibold" data-testid="text-international-news-title">Notícias Internacionais</h3>
+                </div>
+                <Card className="rounded-t-none">
+                  <CardContent className="p-4">
+                    {internationalNews.length > 0 ? (
+                      <div className="space-y-4">
+                        {internationalNews.map((article: any) => (
+                          <div key={article.id} className="flex items-start space-x-3 pb-3 border-b last:border-b-0" data-testid={`card-international-article-${article.id}`}>
+                            {article.imageUrl && (
+                              <img
+                                src={article.imageUrl}
+                                alt={article.title}
+                                className="w-16 h-12 object-cover rounded"
+                              />
+                            )}
+                            <div className="flex-1">
+                              <Link href={`/news/${article.id}`}>
+                                <h4 className="font-medium text-dark-blue text-sm hover:text-blue-700 cursor-pointer transition-colors">{article.title}</h4>
+                              </Link>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {article.createdAt ? new Date(article.createdAt).toLocaleDateString('pt-BR') : ''}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-center py-4">Nenhuma notícia internacional disponível</p>
                     )}
                   </CardContent>
                 </Card>

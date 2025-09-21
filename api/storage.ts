@@ -73,6 +73,33 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  private slugify(input: string): string {
+    return input
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+  }
+
+  private async generateUniqueSlug(base: string, excludeId?: string): Promise<string> {
+    const baseSlug = this.slugify(base);
+    const existing = await db
+      .select({ id: articles.id, slug: articles.slug })
+      .from(articles)
+      .where(like(articles.slug, `${baseSlug}%`));
+
+    const relevant = existing.filter((r) => (excludeId ? r.id !== excludeId : true));
+    if (!relevant.some((r) => r.slug === baseSlug)) return baseSlug;
+
+    let maxSuffix = 1; // start proposing from -2
+    const prefix = `${baseSlug}-`;
+    for (const r of relevant) {
+      if (r.slug.startsWith(prefix)) {
+        const num = Number(r.slug.slice(prefix.length));
+        if (Number.isInteger(num) && num > maxSuffix) maxSuffix = num;
+      }
+    }
+    return `${baseSlug}-${maxSuffix + 1}`;
+  }
   // User operations
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -262,11 +289,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createArticle(article: InsertArticle): Promise<Article> {
-    // Generate slug from title
-    const slug = article.title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
+    // Generate unique slug from title
+    const slug = await this.generateUniqueSlug(article.title);
 
     const [newArticle] = await db
       .insert(articles)
@@ -283,10 +307,7 @@ export class DatabaseStorage implements IStorage {
     
     // Update slug if title changed
     if (article.title) {
-      updateData.slug = article.title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
+      updateData.slug = await this.generateUniqueSlug(article.title, id);
     }
 
     // Set publishedAt when status changes to published

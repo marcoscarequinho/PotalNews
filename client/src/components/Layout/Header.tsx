@@ -4,8 +4,17 @@ import { Button } from "@/components/ui/button";
 export default function Header() {
   const { user } = useAuth();
 
-  const handleLogout = () => {
-    window.location.href = "/api/logout";
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (_) {
+      // ignore network errors on logout
+    } finally {
+      window.location.href = "/login";
+    }
   };
 
   return (
@@ -79,7 +88,7 @@ export default function Header() {
             {user?.role === 'admin' && (
               <li><a href="/users" className="text-dark-blue font-medium hover:text-primary-orange transition-colors" data-testid="nav-users">Usuários</a></li>
             )}
-            <li><a href="/portal" className="text-dark-blue font-medium hover:text-primary-orange transition-colors" data-testid="nav-portal">Portal Público</a></li>
+            <li><a href="/" className="text-dark-blue font-medium hover:text-primary-orange transition-colors" data-testid="nav-portal">Portal Público</a></li>
           </ul>
         </div>
       </nav>

@@ -123,6 +123,50 @@ export default function NewsView() {
               </div>
             )}
 
+            {/* Video */}
+            {article.videoUrl && (
+              <div className="mb-8">
+                <div className="aspect-video w-full rounded-lg overflow-hidden shadow-lg">
+                  {/* YouTube embed */}
+                  {article.videoUrl.includes('youtube.com') || article.videoUrl.includes('youtu.be') ? (
+                    <iframe
+                      src={article.videoUrl.includes('youtu.be')
+                        ? `https://www.youtube.com/embed/${article.videoUrl.split('/').pop()}`
+                        : article.videoUrl.replace('watch?v=', 'embed/')
+                      }
+                      title={article.title}
+                      className="w-full h-full"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  ) : /* Vimeo embed */
+                  article.videoUrl.includes('vimeo.com') ? (
+                    <iframe
+                      src={`https://player.vimeo.com/video/${article.videoUrl.split('/').pop()}`}
+                      title={article.title}
+                      className="w-full h-full"
+                      frameBorder="0"
+                      allow="autoplay; fullscreen; picture-in-picture"
+                      allowFullScreen
+                    />
+                  ) : /* Other video URLs - try direct embed */
+                  (
+                    <video
+                      controls
+                      className="w-full h-full"
+                      poster={article.imageUrl}
+                    >
+                      <source src={article.videoUrl} type="video/mp4" />
+                      <source src={article.videoUrl} type="video/webm" />
+                      <source src={article.videoUrl} type="video/ogg" />
+                      Seu navegador não suporta reprodução de vídeo.
+                    </video>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Action Buttons */}
             <div className="flex gap-3 mb-6">
               <SaveArticleButton 

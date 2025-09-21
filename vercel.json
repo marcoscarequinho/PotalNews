@@ -9,6 +9,11 @@
       }
     }
   ],
+  "functions": {
+    "api/vercel-handler.ts": {
+      "maxDuration": 30
+    }
+  },
   "routes": [
     {
       "src": "/api/auth/login",
@@ -16,11 +21,14 @@
     },
     {
       "src": "/api/(.*)",
-      "dest": "/api/vercel.ts"
+      "dest": "/api/vercel-handler.ts"
     },
     {
       "src": "/(.*)",
       "dest": "/dist/index.html"
     }
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
 }

@@ -1,0 +1,57 @@
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Development files
+.env.local
+.env.development
+
+# Build artifacts (except dist which is needed)
+*.tsbuildinfo
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Coverage directory used by tools like istanbul
+coverage
+
+# Grunt intermediate storage
+.grunt
+
+# Bower dependency directory
+bower_components
+
+# Dependency directories that aren't needed for deployment
+scripts/
+uploads/
+.claude/
+
+# Test files
+*.test.*
+*.spec.*
+__tests__/
+test/
+
+# Documentation
+*.md
+!README.md
+
+# Git
+.git
+.gitignore

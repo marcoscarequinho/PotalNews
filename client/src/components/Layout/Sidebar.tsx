@@ -61,6 +61,18 @@ export default function Sidebar() {
                 </a>
               </Link>
             )}
+            {user?.role === 'admin' && (
+              <Link href="/categories">
+                <a className={`flex items-center px-3 py-2 rounded-lg transition-colors ${
+                  isActive('/categories') || isActive('/admin/categories')
+                    ? 'bg-blue-50 text-secondary-blue' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`} data-testid="nav-categories">
+                  <i className="fas fa-tags mr-3"></i>
+                  Categorias
+                </a>
+              </Link>
+            )}
           </nav>
         </div>
         

@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
+import path from "path";
 import { registerRoutes } from "./routes";
 import { setupVite, log } from "./vite";
 
@@ -8,8 +9,12 @@ console.log('Vercel environment:', process.env.VERCEL);
 console.log('Auth mode:', process.env.AUTH_MODE);
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// Increase body size limits to support large JSON payloads (e.g., base64 images)
+app.use(express.json({ limit: "15mb" }));
+app.use(express.urlencoded({ extended: false, limit: "15mb" }));
+
+// Serve locally uploaded files (images/videos) from /uploads
+app.use("/uploads", express.static(path.resolve("uploads")));
 
 app.use((req, res, next) => {
   const start = Date.now();

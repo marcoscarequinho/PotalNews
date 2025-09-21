@@ -16,25 +16,24 @@ const authMode = process.env.AUTH_MODE || (process.env.VERCEL === "1" && process
 
 if (authMode === 'mock') {
   console.log('Auth is running in mock mode');
-  
+
+  // Enable session middleware in mock mode so routes that rely on req.session work
   setupAuth = async (app: Express) => {
-    // No-op in mock mode
+    const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+    app.use(session({
+      secret: process.env.SESSION_SECRET || 'dev-secret',
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        httpOnly: true,
+        secure: false,
+        maxAge: sessionTtl,
+      },
+    }));
   };
 
-  isAuthenticated = (req, res, next) => {
-    // In mock mode, all requests are authenticated
-    // You can attach a mock user to the request if needed
-    (req as any).user = {
-      id: 'mock-user-id',
-      name: 'Mock User',
-      email: 'mock@example.com',
-      claims: {
-        sub: 'mock-user-id',
-      },
-      roles: ['admin']
-    };
-    next();
-  };
+  // In mock mode, consider everything authenticated. Routes define their own checks.
+  isAuthenticated = (_req, _res, next) => next();
 } else {
   if (!process.env.REPLIT_DOMAINS) {
     throw new Error("Environment variable REPLIT_DOMAINS not provided");
