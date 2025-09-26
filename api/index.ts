@@ -66,6 +66,23 @@ let server: any;
     await setupVite(app, server);
   }
 
+  // In production, serve the built client from dist/ and provide SPA fallback
+  if (app.get("env") !== "development") {
+    const distDir = path.resolve("dist");
+    const indexHtml = path.join(distDir, "index.html");
+
+    // Serve static assets (including /assets from Vite build)
+    app.use(express.static(distDir));
+
+    // SPA fallback: send index.html for non-API, non-uploads routes
+    app.get("*", (req, res, next) => {
+      if (req.path.startsWith("/api") || req.path.startsWith("/uploads")) {
+        return next();
+      }
+      res.sendFile(indexHtml);
+    });
+  }
+
   // For Vercel, we don't start the server here
   // Vercel will handle starting the server
   if (process.env.VERCEL !== "1") {

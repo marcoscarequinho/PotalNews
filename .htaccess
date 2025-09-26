@@ -1,0 +1,23 @@
+###############################################
+# PotalNews - Apache reverse proxy (minimal)  #
+###############################################
+
+# Requisitos: a2enmod proxy proxy_http rewrite
+# Este .htaccess assume que o Node roda em 127.0.0.1:5000
+
+RewriteEngine On
+
+# Proxy todas as requisições para o servidor Node
+# (Express serve o frontend e a API em produção)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ http://127.0.0.1:5000/$1 [P,L]
+
+# Opcional: permitir acesso direto a ACME para emitir certificados
+#RewriteRule ^\.well-known/acme-challenge/ - [L]
+
+# Segurança básica (leve para evitar conflitos)
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+</IfModule>
+

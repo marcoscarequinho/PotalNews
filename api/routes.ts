@@ -3,6 +3,8 @@ import { createServer, type Server } from "http";
 import { promises as fs } from "fs";
 import path from "path";
 import { storage } from "./storage";
+import { db } from "./db";
+import { sql } from "drizzle-orm";
 import { setupAuth } from "./replitAuth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
@@ -16,6 +18,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
 
   // Auth routes
+  // Health check (diagnostic)
+  app.get('/api/health', async (_req, res) => {
+    const start = Date.now();
+    const env = {
+      nodeEnv: process.env.NODE_ENV,
+      vercel: process.env.VERCEL === '1' || process.env.VERCEL === 'true',
+      vercelRegion: process.env.VERCEL_REGION,
+      authMode: process.env.AUTH_MODE,
+    };
+    try {
+      const result: any = await db.execute(sql`select current_timestamp as now`);
+      const now = result?.rows?.[0]?.now ?? null;
+      res.json({
+        ok: true,
+        env,
+        db: { status: 'connected', now },
+        responseTimeMs: Date.now() - start,
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        ok: false,
+        env,
+        db: { status: 'error', message: error?.message || 'DB error' },
+        responseTimeMs: Date.now() - start,
+      });
+    }
+  });
+
+  // Extended health check with table existence and counts
+  app.get('/api/health/full', async (_req, res) => {
+    const start = Date.now();
+    const env = {
+      nodeEnv: process.env.NODE_ENV,
+      vercel: process.env.VERCEL === '1' || process.env.VERCEL === 'true',
+      vercelRegion: process.env.VERCEL_REGION,
+      authMode: process.env.AUTH_MODE,
+    };
+    const result: any = { ok: false, env, responseTimeMs: 0, db: {}, tables: {} };
+    try {
+      const ts: any = await db.execute(sql`select current_timestamp as now, current_user, version()`);
+      result.db = {
+        status: 'connected',
+        now: ts?.rows?.[0]?.now ?? null,
+        user: ts?.rows?.[0]?.current_user ?? null,
+        version: ts?.rows?.[0]?.version ?? null,
+      };
+
+      // Table checks: users, categories, articles, saved_articles
+      const checks = [
+        { key: 'users', q: sql`select count(*)::int as count from users` },
+        { key: 'categories', q: sql`select count(*)::int as count from categories` },
+        { key: 'articles', q: sql`select count(*)::int as count from articles` },
+        { key: 'saved_articles', q: sql`select count(*)::int as count from saved_articles` },
+      ];
+
+      for (const c of checks) {
+        try {
+          const r: any = await db.execute(c.q);
+          result.tables[c.key] = { exists: true, count: r?.rows?.[0]?.count ?? 0 };
+        } catch (e: any) {
+          result.tables[c.key] = { exists: false, error: e?.message || 'error' };
+        }
+      }
+
+      result.ok = true;
+      result.responseTimeMs = Date.now() - start;
+      res.json(result);
+    } catch (error: any) {
+      result.ok = false;
+      result.db = { status: 'error', message: error?.message || 'DB error' };
+      result.responseTimeMs = Date.now() - start;
+      res.status(500).json(result);
+    }
+  });
+
   app.post('/api/auth/login', async (req, res) => {
     console.log('Login route hit:', req.body);
     try {

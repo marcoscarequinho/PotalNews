@@ -1,9 +1,12 @@
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
 import * as schema from "../shared/schema.ts";
 
-neonConfig.webSocketConstructor = ws;
+// Neon configuration: prefer HTTP (fetch) in serverless (e.g., Vercel)
+// WebSockets can fail on serverless providers, so we do not force them.
+// Improve cold start behavior for serverless
+neonConfig.fetchConnectionCache = true;
+neonConfig.poolQueryViaFetch = true;
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
